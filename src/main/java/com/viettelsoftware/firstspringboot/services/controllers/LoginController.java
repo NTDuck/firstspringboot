@@ -1,7 +1,9 @@
 package com.viettelsoftware.firstspringboot.services.controllers;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,39 +19,40 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
+
 @RestController
 public class LoginController {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
+    private @NonNull String issuerUri;
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> loginWithJson(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<@NonNull ?> loginWithJson(@Valid @RequestBody @NonNull LoginRequest request) {
         return authenticate(request.getUsername(), request.getPassword());
     }
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public ResponseEntity<?> loginWithForm(@RequestParam("username") String username, @RequestParam("password") String password) {
+    public ResponseEntity<@NonNull ?> loginWithForm(@RequestParam @NonNull String username, @RequestParam @NonNull String password) {
         return authenticate(username, password);
     }
 
-    private ResponseEntity<?> authenticate(String username, String password) {
-        String tokenUrl = issuerUri + "/protocol/openid-connect/token";
+    private ResponseEntity<@NonNull ?> authenticate(@NonNull String username, @NonNull String password) {
+        val tokenUrl = issuerUri + "/protocol/openid-connect/token";
 
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
+        val restTemplate = new RestTemplate();
+        val headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        val map = new LinkedMultiValueMap<String, String>();
         map.add("grant_type", "password");
         map.add("client_id", "firstspringboot-client");
         map.add("username", username);
         map.add("password", password);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+        val request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, request, String.class);
+            val response = restTemplate.postForEntity(tokenUrl, request, String.class);
             return ResponseEntity.status(response.getStatusCode())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(response.getBody());
@@ -59,10 +62,11 @@ public class LoginController {
                     .body(e.getResponseBodyAsString());
         }
     }
+
     @Getter
     @Setter
     public static class LoginRequest {
-        private String username;
-        private String password;
+        private @NonNull String username;
+        private @NonNull String password;
     }
 }

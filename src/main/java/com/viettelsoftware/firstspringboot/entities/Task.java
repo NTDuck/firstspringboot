@@ -11,8 +11,8 @@ import javax.persistence.*;
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private @NonNull long id;
 
     @Column(name = "task", nullable = false)
-    private String description;
+    private @NonNull String description;
 }

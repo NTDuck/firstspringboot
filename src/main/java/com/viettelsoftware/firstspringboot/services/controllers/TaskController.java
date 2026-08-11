@@ -16,6 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class TaskController {
+
     @Autowired
     private TaskRepository taskRepository;
 
@@ -25,11 +26,10 @@ public class TaskController {
     }
 
     @GetMapping("/tasks/{id}")
-    public ResponseEntity<@NonNull Task> getTaskById(@PathVariable(value = "id") @NonNull long taskId)
-            throws TaskNotFoundException {
-        val task = taskRepository.findById(taskId)
-                .orElseThrow(() -> TaskNotFoundException.of(taskId));
-        return ResponseEntity.ok().body(task);
+    public ResponseEntity<@NonNull Task> getTaskById(@PathVariable(value = "id") @NonNull long id) throws TaskNotFoundException {
+        val task = taskRepository.findById(id)
+                .orElseThrow(() -> TaskNotFoundException.of(id));
+        return ResponseEntity.ok(task);
     }
 
     @PostMapping("/tasks")
@@ -38,23 +38,19 @@ public class TaskController {
     }
 
     @PutMapping("/tasks/{id}")
-    public ResponseEntity<@NonNull Task> updateTask(@PathVariable(value = "id") @NonNull long taskId, @Valid @RequestBody @NonNull Task taskDetails)
-            throws TaskNotFoundException {
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> TaskNotFoundException.of(taskId));
-        if (taskDetails.getDescription() != null) {
-            task.setDescription(taskDetails.getDescription());
-        }
+    public ResponseEntity<@NonNull Task> updateTask(@PathVariable(value = "id") @NonNull long id, @Valid @RequestBody @NonNull Task taskDetails) throws TaskNotFoundException {
+        val task = taskRepository.findById(id)
+                .orElseThrow(() -> TaskNotFoundException.of(id));
+        task.setDescription(taskDetails.getDescription());
 
-        Task updatedTask = taskRepository.save(task);
-        return ResponseEntity.ok().body(updatedTask);
+        val updatedTask = taskRepository.save(task);
+        return ResponseEntity.ok(updatedTask);
     }
 
     @DeleteMapping("/tasks/{id}")
-    public Map<@NonNull String, @NonNull Boolean> deleteTask(@PathVariable(value = "id") @NonNull long taskId)
-            throws TaskNotFoundException {
-        val task = taskRepository.findById(taskId)
-                .orElseThrow(() -> TaskNotFoundException.of(taskId));
+    public Map<@NonNull String, @NonNull Boolean> deleteTask(@PathVariable(value = "id") @NonNull long id) throws TaskNotFoundException {
+        val task = taskRepository.findById(id)
+                .orElseThrow(() -> TaskNotFoundException.of(id));
         taskRepository.delete(task);
 
         return Map.of("deleted", Boolean.TRUE);
@@ -65,7 +61,7 @@ public class TaskController {
         taskRepository.deleteAll();
     }
 
-    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public static class TaskNotFoundException extends Exception {
         private static final long serialVersionUID = 1L;
 
@@ -73,9 +69,8 @@ public class TaskController {
             return new TaskNotFoundException("Task " + taskId + " not found");
         }
 
-        private @NonNull TaskNotFoundException(@NonNull String message) {
+        private TaskNotFoundException(@NonNull String message) {
             super(message);
         }
     }
-
 }
