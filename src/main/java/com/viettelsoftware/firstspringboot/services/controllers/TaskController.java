@@ -58,6 +58,11 @@ public class TaskController {
         return Map.of("deleted", Boolean.TRUE);
     }
 
+    @DeleteMapping("/tasks")
+    public void deleteTasks() {
+        taskRepository.deleteAll();
+    }
+
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
     public static class TaskNotFoundException extends Exception {
         private static final long serialVersionUID = 1L;
