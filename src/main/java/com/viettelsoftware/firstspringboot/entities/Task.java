@@ -11,28 +11,8 @@ import javax.persistence.*;
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Convert(converter = Id_.Converter_.class)
-    private @NonNull Task.Id_ id;
+    private @NonNull long id;
 
     @Column(name = "task", nullable = false)
     private String description;
-
-    // https://github.com/NTDuck/tomfoolery/blob/master/app/src/main/java/org/tomfoolery/core/domain/documents/Document.java
-    @Value
-    public static class Id_ {
-        @NonNull long value;
-
-        @Converter(autoApply = true)
-        public static class Converter_ implements AttributeConverter<Id_, @NonNull Long> {
-            @Override
-            public @NonNull Long convertToDatabaseColumn(@NonNull Task.Id_ id) {
-                return id.value;
-            }
-
-            @Override
-            public @NonNull Task.Id_ convertToEntityAttribute(@NonNull Long value) {
-                return new Id_(value);
-            }
-        }
-    }
 }
