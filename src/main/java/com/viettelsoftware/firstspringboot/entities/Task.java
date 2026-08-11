@@ -10,8 +10,8 @@ import javax.persistence.*;
 @Setter
 public class Task {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private @NonNull long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
     @Column(name = "task", nullable = false)
     private String description;

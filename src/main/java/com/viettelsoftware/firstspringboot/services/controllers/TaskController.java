@@ -38,13 +38,15 @@ public class TaskController {
     }
 
     @PutMapping("/tasks/{id}")
-    public ResponseEntity<@NonNull Task> updateTask(@PathVariable(value = "id") @NonNull long taskId, @Valid @RequestBody @NonNull String description)
+    public ResponseEntity<@NonNull Task> updateTask(@PathVariable(value = "id") @NonNull long taskId, @Valid @RequestBody @NonNull Task taskDetails)
             throws TaskNotFoundException {
-        val task = taskRepository.findById(taskId)
+        Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> TaskNotFoundException.of(taskId));
-        task.setDescription(description);
+        if (taskDetails.getDescription() != null) {
+            task.setDescription(taskDetails.getDescription());
+        }
 
-        val updatedTask = taskRepository.save(task);
+        Task updatedTask = taskRepository.save(task);
         return ResponseEntity.ok().body(updatedTask);
     }
 
