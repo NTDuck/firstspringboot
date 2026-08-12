@@ -47,7 +47,7 @@ public class AuthProxy {
                 )
                 .authorizeRequests(auth -> auth
                         .antMatchers("/actuator/health").permitAll()
-                        .antMatchers("/authenticate").authenticated()
+                        .antMatchers("/profile").authenticated()
                         .antMatchers(HttpMethod.GET, "/api/v1/**").hasAuthority("GET")
                         .antMatchers(HttpMethod.POST, "/api/v1/**").hasAuthority("POST")
                         .antMatchers(HttpMethod.PUT, "/api/v1/**").hasAuthority("PUT")
