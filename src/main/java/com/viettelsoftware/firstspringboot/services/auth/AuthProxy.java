@@ -1,5 +1,7 @@
 package com.viettelsoftware.firstspringboot.services.auth;
 
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
@@ -18,12 +20,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Configuration
+@EnableWebSecurity
 public class AuthProxy {
-
-    @Bean
-    public Converter<Map<String, Object>, Collection<GrantedAuthority>>
-    realmRolesAuthoritiesConverter() {
-        return claims -> {
+    public static class RealmRolesAuthoritiesConverter
+            implements Converter<Map<String, Object>, Collection<GrantedAuthority>> {
+        @Override
+        public Collection<GrantedAuthority> convert(Map<String, Object> claims) {
             var realmAccess = Optional.ofNullable((Map<String, Object>) claims.get("realm_access"));
             var roles = realmAccess.flatMap(map -> Optional.ofNullable((List<String>) map.get("roles")));
 
@@ -32,7 +35,12 @@ public class AuthProxy {
                     .orElseGet(java.util.stream.Stream::empty)
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
-        };
+        }
+    }
+
+    @Bean
+    public RealmRolesAuthoritiesConverter realmRolesAuthoritiesConverter() {
+        return new RealmRolesAuthoritiesConverter();
     }
 
     @Bean
