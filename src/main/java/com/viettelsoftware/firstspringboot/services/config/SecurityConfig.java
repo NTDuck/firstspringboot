@@ -1,7 +1,7 @@
-package com.viettelsoftware.firstspringboot.services.auth;
+package com.viettelsoftware.firstspringboot.services.config;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.val;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,7 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -29,22 +31,22 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
-public class AuthProxy {
+public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
-
         return http
-                .sessionManagement(sessions ->
-                        sessions.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionManagement(sessions -> sessions
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .csrf(csrf -> csrf.disable())
-                .oauth2ResourceServer(resourceServer ->
-                        resourceServer.jwt(jwt ->
-                                jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)
-                        )
+                .oauth2ResourceServer(resourceServer -> resourceServer
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter))
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedHandler(accessDeniedHandler_()))
                 .authorizeRequests(auth -> auth
                         .antMatchers("/actuator/health").permitAll()
                         .antMatchers("/profile").authenticated()
@@ -57,6 +59,14 @@ public class AuthProxy {
                 .build();
     }
 
+
+
+    @Bean
+    public Converter<Map<String, Object>, Collection<GrantedAuthority>> realmRolesAuthoritiesConverter() {
+        return RealmRolesAuthoritiesConverter.of();
+    }
+
+    @NoArgsConstructor(staticName = "of")
     public static class RealmRolesAuthoritiesConverter
             implements Converter<Map<String, Object>, Collection<GrantedAuthority>> {
         @Override
@@ -73,50 +83,87 @@ public class AuthProxy {
     }
 
     @Bean
-    public RealmRolesAuthoritiesConverter realmRolesAuthoritiesConverter() {
-        return new RealmRolesAuthoritiesConverter();
-    }
-
-    @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter(
-            Converter<Map<String, Object>, Collection<GrantedAuthority>>
-                    realmRolesAuthoritiesConverter) {
-
+            Converter<Map<String, Object>, Collection<GrantedAuthority>> realmRolesAuthoritiesConverter) {
         var converter = new JwtAuthenticationConverter();
-
-        converter.setJwtGrantedAuthoritiesConverter(
-                jwt -> realmRolesAuthoritiesConverter.convert(jwt.getClaims())
-        );
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> realmRolesAuthoritiesConverter.convert(jwt.getClaims()));
 
         return converter;
     }
 
+//    @Bean
+//    public AccessDeniedHandler accessDeniedHandler_() {
+//        return (request, response, exception) -> {
+//            Authentication authentication =
+//                    SecurityContextHolder.getContext().getAuthentication();
+//
+//            String username = Optional.ofNullable(authentication)
+//                    .map(Authentication::getName)
+//                    .orElse("N/A");
+//
+//            String role = Optional.ofNullable(authentication)
+//                    .map(Authentication::getAuthorities)
+//                    .flatMap(authorities -> authorities.stream().findFirst())
+//                    .map(GrantedAuthority::getAuthority)
+//                    .orElse("N/A");
+//
+//            val error = AccessDeniedException_.of(username, role);
+//
+//            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+//            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//            response.getWriter().write(
+//                    String.format("{\"message\":\"%s\"}", error.getMessage())
+//            );
+//        };
+//    }
+
     @Bean
-    public AccessDeniedHandler customAccessDeniedHandler() {
+    public AccessDeniedHandler accessDeniedHandler_() {
         return (request, response, exception) -> {
             Authentication authentication =
                     SecurityContextHolder.getContext().getAuthentication();
 
-            String username = Optional.ofNullable(authentication)
-                    .map(Authentication::getName)
-                    .orElse("N/A");
+            String username = "N/A";
+            String role = "N/A";
 
-            String role = Optional.ofNullable(authentication)
-                    .map(Authentication::getAuthorities)
-                    .flatMap(authorities -> authorities.stream().findFirst())
-                    .map(GrantedAuthority::getAuthority)
-                    .orElse("N/A");
+            if (authentication instanceof JwtAuthenticationToken) {
+                JwtAuthenticationToken jwtAuthentication =
+                        (JwtAuthenticationToken) authentication;
 
-            val error = AccessDeniedException_.of(username, role);
+                Jwt jwt = jwtAuthentication.getToken();
+
+                username = Optional.ofNullable(
+                        jwt.getClaimAsString("preferred_username")
+                ).orElse("N/A");
+
+                Map<String, Object> realmAccess =
+                        jwt.getClaim("realm_access");
+
+                if (realmAccess != null) {
+                    Object rolesObject = realmAccess.get("roles");
+
+                    if (rolesObject instanceof List) {
+                        List<?> roles = (List<?>) rolesObject;
+
+                        if (!roles.isEmpty()) {
+                            role = String.valueOf(roles.get(0));
+                        }
+                    }
+                }
+            }
+
+            AccessDeniedException_ error =
+                    AccessDeniedException_.of(username, role);
 
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+
             response.getWriter().write(
-                    "{"
-                            + "\"status\":403,"
-                            + "\"error\":\"Forbidden\","
-                            + "\"message\":\"" + error.getMessage() + "\""
-                            + "}"
+                    String.format(
+                            "{\"message\":\"%s\"}",
+                            error.getMessage()
+                    )
             );
         };
     }
@@ -125,7 +172,7 @@ public class AuthProxy {
     public static class AccessDeniedException_ extends Exception {
         private static final long serialVersionUID = 1L;
 
-        public static @NonNull AuthProxy.AccessDeniedException_ of(@NonNull String username, @NonNull String role) {
+        public static @NonNull SecurityConfig.AccessDeniedException_ of(@NonNull String username, @NonNull String role) {
             return new AccessDeniedException_(String.format("User %s denied access (must have role `%s`)", username, role));
         }
 
