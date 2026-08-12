@@ -89,17 +89,17 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!--		Keycloak-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-client</artifactId>
-<!--			<version>3.5.7</version>-->
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-<!--			<version>3.5.7</version>-->
-		</dependency>
+<!--		&lt;!&ndash;		Keycloak&ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.boot</groupId>-->
+<!--			<artifactId>spring-boot-starter-oauth2-client</artifactId>-->
+<!--&lt;!&ndash;			<version>3.5.7</version>&ndash;&gt;-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.boot</groupId>-->
+<!--			<artifactId>spring-boot-starter-thymeleaf</artifactId>-->
+<!--&lt;!&ndash;			<version>3.5.7</version>&ndash;&gt;-->
+<!--		</dependency>-->
 
 		<dependency>
 			<groupId>com.nimbusds</groupId>

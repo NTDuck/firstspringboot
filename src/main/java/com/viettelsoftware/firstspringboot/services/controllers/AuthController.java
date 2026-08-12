@@ -20,19 +20,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/api/v1")
 public class AuthController {
-    @GetMapping("/me")
-    public UserInfoDto getGretting(JwtAuthenticationToken auth) {
+    @GetMapping("/authenticate")
+    public UserInfoDto authenticate(JwtAuthenticationToken auth) {
         return new UserInfoDto(
                 auth.getToken().getClaimAsString(StandardClaimNames.PREFERRED_USERNAME),
                 auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
     }
 
+    @Getter
+    @Setter
     public static class UserInfoDto {
         String name;
-        List roles;
+        List<String> roles;
 
-        public UserInfoDto(String name, List roles) {
+        public UserInfoDto(String name, List<String> roles) {
             this.name = name;
             this.roles = roles;
         }
