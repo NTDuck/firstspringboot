@@ -16,7 +16,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class TaskController {
-
     @Autowired
     private TaskRepository taskRepository;
 
@@ -66,7 +65,7 @@ public class TaskController {
         private static final long serialVersionUID = 1L;
 
         public static @NonNull TaskNotFoundException of(@NonNull long taskId) {
-            return new TaskNotFoundException("Task " + taskId + " not found");
+            return new TaskNotFoundException(String.format("Task %d not found", taskId));
         }
 
         private TaskNotFoundException(@NonNull String message) {
