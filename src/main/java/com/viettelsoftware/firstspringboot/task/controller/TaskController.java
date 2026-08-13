@@ -34,7 +34,9 @@ public class TaskController {
     @PreAuthorize("hasRole('REALM_ROLE_POST')")
     @PostMapping
     public @NonNull Task createTask(@Valid @RequestBody @NonNull CreateTaskRequest request) {
-        val task = request.toTask();
+        val task = Task.builder()
+                .description(request.getDescription())
+                .build();
         return taskRepository.save(task);
     }
 
