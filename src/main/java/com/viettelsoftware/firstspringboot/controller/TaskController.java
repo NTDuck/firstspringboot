@@ -1,7 +1,7 @@
-package com.viettelsoftware.firstspringboot.services.controllers;
+package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.entities.Task;
-import com.viettelsoftware.firstspringboot.services.repositories.TaskRepository;
+import com.viettelsoftware.firstspringboot.entity.Task;
+import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;

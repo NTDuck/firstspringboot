@@ -1,6 +1,10 @@
-package com.viettelsoftware.firstspringboot.services.config;
+package com.viettelsoftware.firstspringboot.advice;
 
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
 public class GlobalExceptionHandler {
+
 }
 
 // where role used, how to check

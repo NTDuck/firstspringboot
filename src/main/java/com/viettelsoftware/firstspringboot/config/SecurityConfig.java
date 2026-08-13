@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.services.config;
+package com.viettelsoftware.firstspringboot.config;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,10 +38,11 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         return http
+                // https://www.baeldung.com/spring-boot-keycloak#keycloak-config
                 .sessionManagement(sessions -> sessions
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter))
