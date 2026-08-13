@@ -52,10 +52,6 @@ public class SecurityConfig {
                 .authorizeRequests(auth -> auth
                         .antMatchers("/actuator/health").permitAll()
                         .antMatchers("/profile").authenticated()
-                        .antMatchers(HttpMethod.GET, "/api/v1/**").hasAuthority("GET")
-                        .antMatchers(HttpMethod.POST, "/api/v1/**").hasAuthority("POST")
-                        .antMatchers(HttpMethod.PUT, "/api/v1/**").hasAuthority("PUT")
-                        .antMatchers(HttpMethod.DELETE, "/api/v1/**").hasAuthority("DELETE")
                         .anyRequest().denyAll()
                 )
                 .build();
