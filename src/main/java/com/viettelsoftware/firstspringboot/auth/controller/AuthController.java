@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.task.controller;
+package com.viettelsoftware.firstspringboot.auth.controller;
 
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

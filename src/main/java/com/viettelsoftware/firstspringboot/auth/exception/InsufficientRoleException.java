@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.exception;
+package com.viettelsoftware.firstspringboot.auth.exception;
 
 import com.viettelsoftware.firstspringboot.exception.abc.FirstspringbootApplicationException;
 import lombok.Builder;
