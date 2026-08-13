@@ -1,14 +1,15 @@
 package com.viettelsoftware.firstspringboot.config;
 
+import com.viettelsoftware.firstspringboot.auth.exception.InsufficientRoleException;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -58,10 +60,37 @@ public class SecurityConfig {
     }
 
 
-
     @Bean
     public Converter<Map<String, Object>, Collection<GrantedAuthority>> realmRolesAuthoritiesConverter() {
         return RealmRolesAuthoritiesConverter.of();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter(
+            Converter<Map<String, Object>, Collection<GrantedAuthority>> realmRolesAuthoritiesConverter) {
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> realmRolesAuthoritiesConverter.convert(jwt.getClaims()));
+
+        return converter;
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler_() {
+        return (request, response, exception) -> {
+
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
+
+            String username =
+                    Optional.ofNullable(authentication)
+                            .map(Authentication::getName)
+                            .orElse("N/A");
+
+            throw InsufficientRoleException.builder()
+                    .username(username)
+                    .role(resolveRequiredRole(request))
+                    .build();
+        };
     }
 
     @NoArgsConstructor(staticName = "of")
@@ -77,105 +106,6 @@ public class SecurityConfig {
                     .orElseGet(java.util.stream.Stream::empty)
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
-        }
-    }
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter(
-            Converter<Map<String, Object>, Collection<GrantedAuthority>> realmRolesAuthoritiesConverter) {
-        var converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> realmRolesAuthoritiesConverter.convert(jwt.getClaims()));
-
-        return converter;
-    }
-
-//    @Bean
-//    public AccessDeniedHandler accessDeniedHandler_() {
-//        return (request, response, exception) -> {
-//            Authentication authentication =
-//                    SecurityContextHolder.getContext().getAuthentication();
-//
-//            String username = Optional.ofNullable(authentication)
-//                    .map(Authentication::getName)
-//                    .orElse("N/A");
-//
-//            String role = Optional.ofNullable(authentication)
-//                    .map(Authentication::getAuthorities)
-//                    .flatMap(authorities -> authorities.stream().findFirst())
-//                    .map(GrantedAuthority::getAuthority)
-//                    .orElse("N/A");
-//
-//            val error = AccessDeniedException_.of(username, role);
-//
-//            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-//            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//            response.getWriter().write(
-//                    String.format("{\"message\":\"%s\"}", error.getMessage())
-//            );
-//        };
-//    }
-
-    @Bean
-    public AccessDeniedHandler accessDeniedHandler_() {
-        return (request, response, exception) -> {
-            Authentication authentication =
-                    SecurityContextHolder.getContext().getAuthentication();
-
-            String username = "N/A";
-            String role = "N/A";
-
-            if (authentication instanceof JwtAuthenticationToken) {
-                JwtAuthenticationToken jwtAuthentication =
-                        (JwtAuthenticationToken) authentication;
-
-                Jwt jwt = jwtAuthentication.getToken();
-
-                username = Optional.ofNullable(
-                        jwt.getClaimAsString("preferred_username")
-                ).orElse("N/A");
-
-                Map<String, Object> realmAccess =
-                        jwt.getClaim("realm_access");
-
-                if (realmAccess != null) {
-                    Object rolesObject = realmAccess.get("roles");
-
-                    if (rolesObject instanceof List) {
-                        List<?> roles = (List<?>) rolesObject;
-
-                        if (!roles.isEmpty()) {
-                            role = String.valueOf(roles.get(0));
-                        }
-                    }
-                }
-            }
-
-            AccessDeniedException_ error =
-                    AccessDeniedException_.of(username, role);
-
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setCharacterEncoding("UTF-8");
-
-            response.getWriter().write(
-                    String.format(
-                            "{\"message\":\"%s\"}",
-                            error.getMessage()
-                    )
-            );
-        };
-    }
-
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public static class AccessDeniedException_ extends Exception {
-        private static final long serialVersionUID = 1L;
-
-        public static @NonNull SecurityConfig.AccessDeniedException_ of(@NonNull String username, @NonNull String role) {
-            return new AccessDeniedException_(String.format("User %s denied access (must have role `%s`)", username, role));
-        }
-
-        private AccessDeniedException_(@NonNull String message) {
-            super(message);
         }
     }
 }

@@ -18,20 +18,20 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/tasks")
 public class TaskController {
-    @PreAuthorize("hasRole('REALM_ROLE_GET')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping
     public List<@NonNull Task> getTasks() {
         return taskRepository.findAll();
     }
 
-    @PreAuthorize("hasRole('REALM_ROLE_GET')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/{id}")
     public @NonNull Task getTaskById(@PathVariable @NonNull long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> TaskNotFoundException.of(id));
     }
 
-    @PreAuthorize("hasRole('REALM_ROLE_POST')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_POST')")
     @PostMapping
     public @NonNull Task createTask(@Valid @RequestBody @NonNull CreateTaskRequest request) {
         val task = Task.builder()
@@ -40,7 +40,7 @@ public class TaskController {
         return taskRepository.save(task);
     }
 
-    @PreAuthorize("hasRole('REALM_ROLE_PUT')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_PUT')")
     @PutMapping("/{id}")
     public @NonNull Task updateTask(@PathVariable @NonNull long id, @Valid @RequestBody @NonNull UpdateTaskRequest request) {
         val task = taskRepository.findById(id)
@@ -50,7 +50,7 @@ public class TaskController {
         return taskRepository.save(task);
     }
 
-    @PreAuthorize("hasRole('REALM_ROLE_DELETE')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
     @DeleteMapping("/{id}")
     public Map<@NonNull String, @NonNull Boolean> deleteTask(@PathVariable @NonNull long id) throws TaskNotFoundException {
         val task = taskRepository.findById(id)
@@ -60,7 +60,7 @@ public class TaskController {
         return Map.of("deleted", true);
     }
 
-    @PreAuthorize("hasRole('REALM_ROLE_DELETE')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
     @DeleteMapping
     public Map<@NonNull String, @NonNull Long> deleteTasks() {
         val taskCount = taskRepository.count();
