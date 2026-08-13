@@ -17,8 +17,6 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-//    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
     @ExceptionHandler(FirstspringbootApplicationException.class)
     public @NonNull ResponseEntity<Payload> handle(@NonNull FirstspringbootApplicationException exception, @NonNull HttpServletRequest request) {
         val payload = Payload.builder()

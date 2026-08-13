@@ -13,7 +13,11 @@ public abstract class FirstspringbootApplicationException extends RuntimeExcepti
         super(message);
 
         this.httpStatus = httpStatus;
-        this.error = httpStatus.getReasonPhrase();
+        // Transform into SCREAMING_SNAKE_CASE
+        this.error = httpStatus
+                .getReasonPhrase()
+                .toUpperCase()
+                .replace(" ", "_");
     }
 
     protected FirstspringbootApplicationException(@NonNull HttpStatus httpStatus, @NonNull String error, @NonNull String message) {
