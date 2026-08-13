@@ -1,13 +1,14 @@
-package com.viettelsoftware.firstspringboot.entity;
+package com.viettelsoftware.firstspringboot.task.entity;
 
 import lombok.*;
 import javax.persistence.*;
 
 // https://www.javaguides.net/2020/01/spring-boot-mariadb-crud-example-tutorial.html
-@Entity
-@Table(name = "tasks")
 @Getter
 @Setter
+@Builder
+@Entity
+@Table(name = "tasks")
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

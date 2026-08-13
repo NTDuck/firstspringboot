@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.exception;
+package com.viettelsoftware.firstspringboot.task.exception;
 
 import com.viettelsoftware.firstspringboot.exception.abc.FirstspringbootApplicationException;
 import lombok.Builder;
@@ -9,6 +9,10 @@ import org.springframework.http.HttpStatus;
 @Getter
 public class TaskNotFoundException extends FirstspringbootApplicationException {
     private final @NonNull long taskId;
+
+    public static @NonNull TaskNotFoundException of(@NonNull long taskId) {
+        return new TaskNotFoundException(taskId);
+    }
 
     @Builder
     public TaskNotFoundException(@NonNull long taskId) {
