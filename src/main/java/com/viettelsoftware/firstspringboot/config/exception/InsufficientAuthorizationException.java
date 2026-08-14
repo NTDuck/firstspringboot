@@ -9,15 +9,15 @@ import org.springframework.http.HttpStatus;
 @Getter
 public class InsufficientAuthorizationException extends FirstspringbootApplicationException {
     private final @NonNull String username;
-    private final @NonNull String authorizationExpression;
+    private final @NonNull String operation;
 
     @Builder
-    public InsufficientAuthorizationException(@NonNull String username, @NonNull String authorizationExpression) {
+    public InsufficientAuthorizationException(@NonNull String username, @NonNull String operation) {
         super(
                 HttpStatus.FORBIDDEN,
-                String.format("User `%s` lacks authorization `%s`", username, authorizationExpression));
+                String.format("User `%s` not authorized to `%s`", username, operation));
 
         this.username = username;
-        this.authorizationExpression = authorizationExpression;
+        this.operation = operation;
     }
 }
