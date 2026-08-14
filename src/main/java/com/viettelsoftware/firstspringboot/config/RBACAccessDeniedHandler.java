@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-public class CustomAccessDeniedHandler implements AccessDeniedHandler {
+public class RBACAccessDeniedHandler implements AccessDeniedHandler {
 
     @Autowired
     @Lazy

@@ -30,12 +30,7 @@ public class FilterChainExceptionHandler extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } catch (Exception exception) {
-            resolver.resolveException(
-                    request,
-                    response,
-                    null,
-                    exception
-            );
+            resolver.resolveException(request, response, null, exception);
         }
     }
 
