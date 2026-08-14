@@ -7,6 +7,8 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor(force = true)
+@AllArgsConstructor
 @Entity
 @Table(name = "tasks")
 public class Task {

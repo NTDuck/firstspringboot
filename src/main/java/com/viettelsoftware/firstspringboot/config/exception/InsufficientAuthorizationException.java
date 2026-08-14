@@ -15,7 +15,7 @@ public class InsufficientAuthorizationException extends FirstspringbootApplicati
     public InsufficientAuthorizationException(@NonNull String username, @NonNull String authorizationExpression) {
         super(
                 HttpStatus.FORBIDDEN,
-                String.format("User %s lacks authorization `%s`", username, authorizationExpression));
+                String.format("User `%s` lacks authorization `%s`", username, authorizationExpression));
 
         this.username = username;
         this.authorizationExpression = authorizationExpression;

@@ -18,7 +18,7 @@ public class TaskNotFoundException extends FirstspringbootApplicationException {
     public TaskNotFoundException(@NonNull long taskId) {
         super(
                 HttpStatus.NOT_FOUND,
-                String.format("Task %d not found", taskId));
+                String.format("Task `%d` not found", taskId));
 
         this.taskId = taskId;
     }
