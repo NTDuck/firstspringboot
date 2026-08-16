@@ -34,15 +34,10 @@ public class GlobalExceptionHandler {
         private final @NonNull Instant timestamp = Instant.now();
 
         @Builder.Default
-        private final @NonNull UUID traceId = UUID.randomUUID();
+        private final @NonNull UUID traceId = UUID.randomUUID(); // service, tts,
 
         private final @NonNull int status;
         private final @NonNull String error;
         private final @NonNull String message;
     }
 }
-
-// where role used, how to check
-
-//    custom security config
-//    global exception handler

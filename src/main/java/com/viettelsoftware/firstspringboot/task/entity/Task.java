@@ -16,6 +16,7 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @NonNull long id;
 
+    @With
     @Column(name = "task", nullable = false)
     private @NonNull String description;
 }

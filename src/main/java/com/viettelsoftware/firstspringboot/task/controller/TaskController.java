@@ -4,7 +4,7 @@ import com.viettelsoftware.firstspringboot.task.dto.CreateTaskRequest;
 import com.viettelsoftware.firstspringboot.task.dto.UpdateTaskRequest;
 import com.viettelsoftware.firstspringboot.task.entity.Task;
 import com.viettelsoftware.firstspringboot.task.exception.TaskNotFoundException;
-import com.viettelsoftware.firstspringboot.task.repository.TaskRepository;
+import com.viettelsoftware.firstspringboot.task.service.TaskService;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +21,13 @@ public class TaskController {
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping
     public List<@NonNull Task> getTasks() {
-        return taskRepository.findAll();
+        return taskService.getTasks();
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/{id}")
     public @NonNull Task getTaskById(@PathVariable @NonNull long id) {
-        return taskRepository.findById(id)
+        return taskService.getTaskById(id)
                 .orElseThrow(() -> TaskNotFoundException.of(id));
     }
 
@@ -37,38 +37,34 @@ public class TaskController {
         val task = Task.builder()
                 .description(request.getDescription())
                 .build();
-        return taskRepository.save(task);
+        return taskService.createTask(task);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_PUT')")
     @PutMapping("/{id}")
-    public @NonNull Task updateTask(@PathVariable @NonNull long id, @Valid @RequestBody @NonNull UpdateTaskRequest request) {
-        val task = taskRepository.findById(id)
+    public @NonNull Task updateTaskById(@PathVariable @NonNull long id, @Valid @RequestBody @NonNull UpdateTaskRequest request) {
+        return taskService.updateTask(id, request.getDescription())
                 .orElseThrow(() -> TaskNotFoundException.of(id));
-        task.setDescription(request.getDescription());
-
-        return taskRepository.save(task);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
     @DeleteMapping("/{id}")
-    public Map<@NonNull String, @NonNull Boolean> deleteTask(@PathVariable @NonNull long id) throws TaskNotFoundException {
-        val task = taskRepository.findById(id)
-                .orElseThrow(() -> TaskNotFoundException.of(id));
-        taskRepository.delete(task);
+    public Map<@NonNull String, @NonNull Boolean> deleteTaskById(@PathVariable @NonNull long id) throws TaskNotFoundException {
+        val exists = taskService.exists(id);
+        taskService.deleteTaskById(id);
 
-        return Map.of("deleted", true);
+        return Map.of("deleted", exists);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
     @DeleteMapping
     public Map<@NonNull String, @NonNull Long> deleteTasks() {
-        val taskCount = taskRepository.count();
-        taskRepository.deleteAll();
+        val taskCount = taskService.count();
+        taskService.deleteTasks();
 
         return Map.of("deleted", taskCount);
     }
 
     @Autowired
-    private TaskRepository taskRepository;
+    private TaskService taskService;
 }
