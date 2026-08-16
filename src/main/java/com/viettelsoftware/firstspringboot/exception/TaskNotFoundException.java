@@ -1,6 +1,5 @@
-package com.viettelsoftware.firstspringboot.task.exception;
+package com.viettelsoftware.firstspringboot.exception;
 
-import com.viettelsoftware.firstspringboot.exception.abc.FirstspringbootApplicationException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;

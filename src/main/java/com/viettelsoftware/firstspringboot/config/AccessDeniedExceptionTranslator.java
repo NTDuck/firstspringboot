@@ -1,13 +1,14 @@
 package com.viettelsoftware.firstspringboot.config;
 
-import com.viettelsoftware.firstspringboot.config.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.exception.InsufficientAuthorizationException;
 import lombok.val;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerMapping;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

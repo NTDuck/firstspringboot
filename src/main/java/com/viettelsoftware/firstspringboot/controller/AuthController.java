@@ -1,12 +1,14 @@
-package com.viettelsoftware.firstspringboot.auth.controller;
+package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.auth.dto.GetUserResponse;
-import lombok.*;
+import com.viettelsoftware.firstspringboot.dto.GetUserResponse;
+import lombok.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.stream.Collectors;
 

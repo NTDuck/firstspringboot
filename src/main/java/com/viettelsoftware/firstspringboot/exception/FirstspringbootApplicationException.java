@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.exception.abc;
+package com.viettelsoftware.firstspringboot.exception;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -13,7 +13,7 @@ public abstract class FirstspringbootApplicationException extends RuntimeExcepti
         super(message);
 
         this.httpStatus = httpStatus;
-        // Transform into SCREAMING_SNAKE_CASE
+        // Transforms into SCREAMING_SNAKE_CASE
         this.error = httpStatus
                 .getReasonPhrase()
                 .toUpperCase()

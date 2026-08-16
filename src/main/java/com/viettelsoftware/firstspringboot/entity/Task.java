@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.task.entity;
+package com.viettelsoftware.firstspringboot.entity;
 
 import lombok.*;
 import javax.persistence.*;

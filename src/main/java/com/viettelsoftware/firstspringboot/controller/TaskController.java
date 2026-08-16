@@ -1,10 +1,10 @@
-package com.viettelsoftware.firstspringboot.task.controller;
+package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.task.dto.CreateTaskRequest;
-import com.viettelsoftware.firstspringboot.task.dto.UpdateTaskRequest;
-import com.viettelsoftware.firstspringboot.task.entity.Task;
-import com.viettelsoftware.firstspringboot.task.exception.TaskNotFoundException;
-import com.viettelsoftware.firstspringboot.task.service.TaskService;
+import com.viettelsoftware.firstspringboot.dto.CreateTaskRequest;
+import com.viettelsoftware.firstspringboot.dto.UpdateTaskRequest;
+import com.viettelsoftware.firstspringboot.entity.Task;
+import com.viettelsoftware.firstspringboot.exception.TaskNotFoundException;
+import com.viettelsoftware.firstspringboot.service.TaskService;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;

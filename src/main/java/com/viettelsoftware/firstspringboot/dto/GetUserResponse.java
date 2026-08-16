@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.auth.dto;
+package com.viettelsoftware.firstspringboot.dto;
 
 import lombok.Builder;
 import lombok.Getter;

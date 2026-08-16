@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.config;
 
-import com.viettelsoftware.firstspringboot.exception.abc.FirstspringbootApplicationException;
+import com.viettelsoftware.firstspringboot.exception.FirstspringbootApplicationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;

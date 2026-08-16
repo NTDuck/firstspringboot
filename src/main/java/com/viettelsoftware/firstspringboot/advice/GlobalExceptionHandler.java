@@ -1,11 +1,10 @@
 package com.viettelsoftware.firstspringboot.advice;
 
-import com.viettelsoftware.firstspringboot.exception.abc.FirstspringbootApplicationException;
+import com.viettelsoftware.firstspringboot.exception.FirstspringbootApplicationException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
