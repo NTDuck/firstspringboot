@@ -29,6 +29,7 @@ public class LoggingAspect {
         val timestamp = Instant.now();
         val method = joinPoint.getSignature().toShortString();
         val args = joinPoint.getArgs();
+
         logger.info("[[BEFORE]] [{}] method: {}, params: {}", timestamp, method, Arrays.toString(args));
     }
 
@@ -37,6 +38,7 @@ public class LoggingAspect {
         val timestamp = Instant.now();
         val method = joinPoint.getSignature().toShortString();
         val args = joinPoint.getArgs();
+
         logger.info("[[AFTER]] [{}] method: {}, params: {}", timestamp, method, Arrays.toString(args));
     }
 }

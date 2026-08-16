@@ -4,10 +4,14 @@ import com.viettelsoftware.firstspringboot.dto.CreateTaskRequest;
 import com.viettelsoftware.firstspringboot.dto.UpdateTaskRequest;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.exception.TaskNotFoundException;
+import com.viettelsoftware.firstspringboot.service.TaskExportService;
 import com.viettelsoftware.firstspringboot.service.TaskService;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +22,27 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/tasks")
 public class TaskController {
+    @Autowired
+    private TaskService taskService;
+
+    @Autowired
+    private TaskExportService taskExportService;
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping
     public List<@NonNull Task> getTasks() {
         return taskService.getTasks();
     }
+    @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportTasks() {
+        val tasks = taskService.getTasks();
+        val excelBytes = taskExportService.exportTasks(tasks);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tasks.xlsx\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelBytes);
+    }
+
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/{id}")
@@ -65,6 +85,4 @@ public class TaskController {
         return Map.of("deleted", taskCount);
     }
 
-    @Autowired
-    private TaskService taskService;
 }

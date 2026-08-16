@@ -17,7 +17,15 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    @Bean
+    @Autowired
+    private SecurityFilterChainExceptionHandler securityFilterChainExceptionHandler;
+
+    @Autowired
+    private AccessDeniedHandler accessDeniedHandler;
+
+    @Autowired
+    private JwtAuthenticationConverter jwtAuthenticationConverter;
+
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .addFilterBefore(securityFilterChainExceptionHandler, LogoutFilter.class)
@@ -30,17 +38,8 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeRequests(auth -> auth
-                        .antMatchers("/actuator/health").permitAll()
+                        .antMatchers("/actuator/health", "/actuator/health/**", "/actuator/**").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }
-
-    @Autowired
-    private SecurityFilterChainExceptionHandler securityFilterChainExceptionHandler;
-
-    @Autowired
-    private AccessDeniedHandler accessDeniedHandler;
-
-    @Autowired
-    private JwtAuthenticationConverter jwtAuthenticationConverter;
 }

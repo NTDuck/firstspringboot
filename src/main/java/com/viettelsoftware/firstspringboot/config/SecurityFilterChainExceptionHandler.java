@@ -17,6 +17,8 @@ import java.io.IOException;
 // Routes to `GlobalExceptionHandler`
 @Component
 public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
+    private final HandlerExceptionResolver resolver;
+
     public SecurityFilterChainExceptionHandler(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.resolver = resolver;
     }
@@ -34,5 +36,4 @@ public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
         }
     }
 
-    private final HandlerExceptionResolver resolver;
 }
