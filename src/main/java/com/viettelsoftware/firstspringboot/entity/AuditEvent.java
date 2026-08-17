@@ -33,7 +33,7 @@ public class AuditEvent {
 
     @Builder.Default
     @Column(name = "actor_username", nullable = false)
-    private @NonNull String actorUsername = "";
+    private @NonNull String actorUsername;
 
     @Column(name = "action", nullable = false)
     private @NonNull String action;

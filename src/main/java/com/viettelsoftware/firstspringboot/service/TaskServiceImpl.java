@@ -4,10 +4,10 @@ import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import lombok.NonNull;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,76 +20,75 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private AuthService authService;
+
     @Override
     public @NonNull boolean exists(@NonNull long taskId) {
+        audit("EXISTS");
         return taskRepository.existsById(taskId);
     }
 
     @Override
     public @NonNull long count() {
+        audit("COUNT");
         return taskRepository.count();
     }
 
     @Override
     public Optional<@NonNull Task> getTaskById(@NonNull long taskId) {
+        audit("GET_TASK_BY_ID");
         return taskRepository.findById(taskId);
     }
 
     @Override
     public List<@NonNull Task> getTasks() {
+        audit("GET_TASKS");
         return taskRepository.findAll();
     }
 
     @Override
     public @NonNull Task createTask(@NonNull Task task) {
         Task created = taskRepository.save(task);
-        auditService.audit(AuditEvent.builder()
-                .timestamp(Instant.now())
-                .serviceName("TaskService")
-                .actorUserId(0L)
-                .action("CREATE_TASK")
-                .result(true)
-                .build());
+
+        audit("CREATE_TASK");
         return created;
     }
 
     @Override
     public @NonNull Optional<@NonNull Task> updateTask(@NonNull long taskId, @NonNull String description) {
-        Optional<Task> updated = taskRepository.findById(taskId)
+        val updatedTask = taskRepository.findById(taskId)
                 .map(task -> taskRepository.save(task.withDescription(description)));
 
-        auditService.audit(AuditEvent.builder()
-                .timestamp(Instant.now())
-                .serviceName("TaskService")
-                .actorUserId(0L)
-                .action("UPDATE_TASK")
-                .result(updated.isPresent())
-                .build());
-
-        return updated;
+        audit("UPDATE_TASK");
+        return updatedTask;
     }
 
     @Override
     public void deleteTaskById(@NonNull long taskId) {
         taskRepository.deleteById(taskId);
-        auditService.audit(AuditEvent.builder()
-                .timestamp(Instant.now())
-                .serviceName("TaskService")
-                .actorUserId(0L)
-                .action("DELETE_TASK")
-                .result(true)
-                .build());
+        audit("DELETE_TASK_BY_ID");
     }
 
     @Override
     public void deleteTasks() {
         taskRepository.deleteAll();
-        auditService.audit(AuditEvent.builder()
-                .timestamp(Instant.now())
-                .serviceName("TaskService")
-                .actorUserId(0L)
-                .action("DELETE_TASKS")
+        audit("DELETE_TASKS");
+    }
+
+    private void audit(@NonNull String action) {
+        val currentUser = authService.getCurrentUser();
+        assert currentUser != null;
+
+        val auditEvent = AuditEvent.builder()
+                .serviceName(TaskService.class.getSimpleName())
+                .actorUserId(currentUser.getId())
+                .actorUsername(currentUser.getName())
+                .action(action)
                 .result(true)
-                .build());
+                .exception(null)
+                .build();
+
+        auditService.audit(auditEvent);
     }
 }

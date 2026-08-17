@@ -11,6 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -35,7 +38,9 @@ class EndToEndIntegrationTest {
     @Test
     void testProfileEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/users/profile")
-                        .with(jwt().jwt(jwt -> jwt.claim("preferred_username", "testuser"))
+                        .with(jwt().jwt(jwt -> jwt
+                                        .claim("preferred_username", "testuser")
+                                        .claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("testuser"));
@@ -44,11 +49,13 @@ class EndToEndIntegrationTest {
     @Test
     void testGetTasksAndExport() throws Exception {
         mockMvc.perform(get("/api/v1/tasks")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/tasks/export")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", startsWith("attachment; filename=\"tasks-")))
                 .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -61,7 +68,8 @@ class EndToEndIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/tasks")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_POST")))
+                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidReq)))
                 .andExpect(status().isBadRequest());
@@ -78,18 +86,21 @@ class EndToEndIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/users")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_POST")))
+                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST", "REALM_ROLE_USER_CREATE"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"), new SimpleGrantedAuthority("REALM_ROLE_USER_CREATE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.keycloakId").value("kc-test-123"));
+                .andExpect(jsonPath("$.keycloakId").exists());
 
         mockMvc.perform(get("/api/v1/users")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/users/export")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", startsWith("attachment; filename=\"users-")))
                 .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));

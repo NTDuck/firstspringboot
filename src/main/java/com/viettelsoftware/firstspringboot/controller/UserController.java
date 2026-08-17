@@ -38,6 +38,8 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public @NonNull GetUserResponse profile() {
         val currentUser = authService.getCurrentUser();
+        assert currentUser != null;
+
         return GetUserResponse.builder()
                 .name(currentUser.getName())
                 .roles(currentUser.getRoles())
@@ -66,7 +68,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('REALM_ROLE_POST')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_USER_CREATE') and hasAuthority('REALM_ROLE_POST')")
     public @NonNull User createUser(@Valid @RequestBody @NonNull CreateUserRequest request) {
         val user = User.builder()
                 .keycloakId(request.getKeycloakId())

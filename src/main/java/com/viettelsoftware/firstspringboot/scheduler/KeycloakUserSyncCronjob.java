@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.scheduler;
 
 import com.viettelsoftware.firstspringboot.entity.User;
-import com.viettelsoftware.firstspringboot.service.UserService;
+import com.viettelsoftware.firstspringboot.repository.UserRepository;
 import lombok.NonNull;
 import lombok.val;
 import org.slf4j.Logger;
@@ -12,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -27,7 +28,7 @@ public class KeycloakUserSyncCronjob {
     private final @NonNull Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Value("${keycloak.admin.server-url}")
     private String keycloakServerUrl;
@@ -47,7 +48,7 @@ public class KeycloakUserSyncCronjob {
     @Value("${keycloak.admin.client-id}")
     private String adminClientId;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final @NonNull RestTemplate restTemplate = new RestTemplate();
 
     @EventListener(ApplicationReadyEvent.class)
     @Scheduled(cron = "${keycloak.sync.cron:0 */5 * * * *}")
@@ -67,26 +68,36 @@ public class KeycloakUserSyncCronjob {
             }
 
             for (Map<String, Object> userMap : keycloakUsers) {
-                val keycloakId = extractString(userMap, "id");
-                if (keycloakId.isBlank()) {
+                String keycloakId = extractOrDefault(userMap, "id");
+                if (keycloakId.isBlank() || "N/A".equals(keycloakId)) {
                     continue;
                 }
 
-                val username = extractString(userMap, "username");
-                val email = extractString(userMap, "email");
-                val firstName = extractString(userMap, "firstName");
-                val lastName = extractString(userMap, "lastName");
-                val name = !username.isBlank() ? username : (firstName + " " + lastName).trim();
+                val username = extractOrDefault(userMap, "username");
+                val email = extractOrDefault(userMap, "email");
+                val firstName = extractOrDefault(userMap, "firstName");
+                val lastName = extractOrDefault(userMap, "lastName");
+                val name = !username.isBlank() && !"N/A".equals(username)
+                        ? username
+                        : (firstName + " " + lastName).trim();
 
                 val user = User.builder()
                         .keycloakId(keycloakId)
-                        .name(name)
-                        .email(email)
-                        .firstName(firstName)
-                        .lastName(lastName)
+                        .name("N/A".equals(name) ? "" : name)
+                        .email("N/A".equals(email) ? "" : email)
+                        .firstName("N/A".equals(firstName) ? "" : firstName)
+                        .lastName("N/A".equals(lastName) ? "" : lastName)
                         .build();
 
-                userService.createUser(user);
+                userRepository.findByKeycloakId(keycloakId)
+                        .map(existing -> {
+                            existing.setName(user.getName());
+                            existing.setEmail(user.getEmail());
+                            existing.setFirstName(user.getFirstName());
+                            existing.setLastName(user.getLastName());
+                            return userRepository.save(existing);
+                        })
+                        .orElseGet(() -> userRepository.save(user));
             }
             logger.info("Keycloak user synchronization completed successfully. Synced {} users.", keycloakUsers.size());
         } catch (Exception e) {
@@ -94,12 +105,16 @@ public class KeycloakUserSyncCronjob {
         }
     }
 
-    private String extractString(Map<String, Object> map, String key) {
-        val valObj = map.getOrDefault(key, "");
-        return valObj != null ? valObj.toString() : "";
+    private String extractOrDefault(@NonNull Map<@NonNull String, @NonNull Object> map, @NonNull String key) {
+        return extractOrDefault(map, key, "");
     }
 
-    private String getAdminAccessToken() {
+    private String extractOrDefault(@NonNull Map<@NonNull String, @NonNull Object> map, @NonNull String key, @NonNull String defaultValue) {
+        val valObj = map.getOrDefault(key, defaultValue);
+        return valObj != null ? valObj.toString() : defaultValue;
+        }
+
+    private @Nullable String getAdminAccessToken() {
         String tokenUrl = keycloakServerUrl + "/realms/" + adminRealm + "/protocol/openid-connect/token";
 
         HttpHeaders headers = new HttpHeaders();
@@ -122,7 +137,7 @@ public class KeycloakUserSyncCronjob {
         return null;
     }
 
-    private List<Map<String, Object>> fetchKeycloakUsers(String token) {
+    private @NonNull List<Map<String, Object>> fetchKeycloakUsers(String token) {
         String usersUrl = keycloakServerUrl + "/admin/realms/" + targetRealm + "/users";
 
         HttpHeaders headers = new HttpHeaders();
@@ -132,7 +147,8 @@ public class KeycloakUserSyncCronjob {
         ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
                 usersUrl, HttpMethod.GET, request, new ParameterizedTypeReference<List<Map<String, Object>>>() {});
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            return response.getBody();
+            val body = response.getBody();
+            return body != null ? body : List.of();
         }
         return List.of();
     }

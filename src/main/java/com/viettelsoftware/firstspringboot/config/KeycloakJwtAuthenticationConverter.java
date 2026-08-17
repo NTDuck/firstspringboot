@@ -14,18 +14,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-// https://www.baeldung.com/spring-boot-keycloak
 @Component
 public class KeycloakJwtAuthenticationConverter extends JwtAuthenticationConverter {
-    @Autowired
-    private KeycloakRealmRolesAuthoritiesConverter keycloakRealmRolesAuthoritiesConverter;
 
-    public KeycloakJwtAuthenticationConverter() {
+    private final KeycloakRealmRolesAuthoritiesConverter keycloakRealmRolesAuthoritiesConverter;
+
+    @Autowired
+    public KeycloakJwtAuthenticationConverter(KeycloakRealmRolesAuthoritiesConverter keycloakRealmRolesAuthoritiesConverter) {
+        this.keycloakRealmRolesAuthoritiesConverter = keycloakRealmRolesAuthoritiesConverter;
+        setPrincipalClaimName("preferred_username");
         setJwtGrantedAuthoritiesConverter(
                 jwt -> keycloakRealmRolesAuthoritiesConverter.convert(jwt.getClaims())
         );
     }
-
 
     @Component
     private static class KeycloakRealmRolesAuthoritiesConverter

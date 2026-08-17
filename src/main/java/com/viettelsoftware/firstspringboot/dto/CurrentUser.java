@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CurrentUser {
-    private final @NonNull String id;
+    private final @NonNull long id;
     private final @NonNull String name;
     private final List<@NonNull String> roles;
 }

@@ -22,7 +22,7 @@ public class AuditController {
     private AuditService auditService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('REALM_ROLE_AUDIT')")
+    @PreAuthorize("hasAuthority('REALM_ROLE_AUDIT_READ') and hasAuthority('REALM_ROLE_GET')")
     public @NonNull Page<@NonNull AuditEvent> search(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day,
             @RequestParam(required = false) String serviceName,

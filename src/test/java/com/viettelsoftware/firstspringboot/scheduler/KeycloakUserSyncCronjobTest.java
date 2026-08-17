@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.scheduler;
 
-import com.viettelsoftware.firstspringboot.service.UserService;
+import com.viettelsoftware.firstspringboot.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class KeycloakUserSyncCronjobTest {
 
     @Mock
-    private UserService userService;
+    private UserRepository userRepository;
 
     @InjectMocks
     private KeycloakUserSyncCronjob cronjob;
@@ -31,6 +31,6 @@ class KeycloakUserSyncCronjobTest {
         ReflectionTestUtils.setField(cronjob, "adminClientId", "admin-cli");
 
         assertDoesNotThrow(() -> cronjob.syncKeycloakUsers());
-        verify(userService, never()).createUser(any());
+        verify(userRepository, never()).save(any());
     }
 }
