@@ -18,6 +18,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +34,7 @@ public class UserController {
     @Autowired
     private UserExportService userExportService;
 
-    @GetMapping({"/profile", "/api/v1/profile"})
+    @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     public @NonNull GetUserResponse profile(@NonNull JwtAuthenticationToken auth) {
         return GetUserResponse.builder()
@@ -57,8 +60,13 @@ public class UserController {
     public ResponseEntity<byte[]> exportUsers() {
         val users = userService.getUsers();
         val excelBytes = userExportService.exportUsers(users);
+
+        val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ISO_DATE_TIME);
+        val filename = String.format("users-%s.xlsx", timestamp);
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"users.xlsx\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", filename))
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(excelBytes);
     }
@@ -73,6 +81,7 @@ public class UserController {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .build();
+
         return userService.createUser(user);
     }
 }
