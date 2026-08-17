@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeRequests(auth -> auth
-                        .antMatchers("/actuator/health", "/actuator/health/**", "/actuator/**").permitAll()
+                        .antMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }

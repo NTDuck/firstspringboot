@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidTaskDescription {
-    String message() default "Task description must not be blank, must be at most 255 characters, and must not begin or end with whitespace";
+    String message() default "Invalid task description (must be `@NotBlank + @Size(max = 255) + @Pattern(regexp = \"^\\\\S(?:.*\\\\S)?$\")`)";
 
     Class<?>[] groups() default {};
 
