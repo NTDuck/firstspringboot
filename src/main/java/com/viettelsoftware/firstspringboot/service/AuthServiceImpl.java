@@ -23,7 +23,12 @@ public class AuthServiceImpl implements AuthService {
 
         Jwt token = ((JwtAuthenticationToken) authentication).getToken();
 
-        long userId = Long.parseLong(token.getSubject());
+        long userId = 0L;
+        try {
+            userId = Long.parseLong(token.getSubject());
+        } catch (NumberFormatException ignored) {
+        }
+
         String preferredUsername = token.getClaimAsString(StandardClaimNames.PREFERRED_USERNAME);
         String username = preferredUsername != null ? preferredUsername : (token.getSubject() != null ? token.getSubject() : "");
         List<String> roles = authentication.getAuthorities()

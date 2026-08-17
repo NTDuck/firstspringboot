@@ -1,22 +1,17 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.AuditQuery;
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.repository.AuditEventRepository;
 import lombok.NonNull;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.Predicate;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class AuditServiceImpl implements AuditService {
@@ -24,51 +19,57 @@ public class AuditServiceImpl implements AuditService {
     @Autowired
     private AuditEventRepository auditEventRepository;
 
-    @Autowired
-    private AuthService authService;
-
     @Override
     public void audit(@NonNull AuditEvent event) {
         auditEventRepository.save(event);
     }
 
     @Override
-    public @NonNull Page<@NonNull AuditEvent> search(@NonNull AuditQuery query, @NonNull Pageable pageable) {
-        val specification = buildSpecificationFromQuery(query);
-        return auditEventRepository.findAll(specification, pageable);
+    public @NonNull Page<@NonNull AuditEvent> search(
+            @Nullable LocalDate day,
+            @Nullable String serviceName,
+            @Nullable Long actorUserId,
+            @Nullable String actorUsername,
+            @Nullable String action,
+            @Nullable Boolean result,
+            @NonNull Pageable pageable) {
+
+        Instant startOfDay = day != null ? day.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
+        Instant endOfDay = day != null ? day.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant() : null;
+
+        return auditEventRepository.searchAuditEvents(
+                startOfDay, endOfDay, serviceName, actorUserId, actorUsername, action, result, pageable);
     }
 
-    private @NonNull Specification<@NonNull AuditEvent> buildSpecificationFromQuery(@NonNull AuditQuery query) {
-        return (root, criteriaQuery, builder) -> {
-            List<Predicate> predicates = new ArrayList<>();
+    @Override
+    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByDay(@NonNull LocalDate day, @NonNull Pageable pageable) {
+        Instant startOfDay = day.atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant endOfDay = day.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
+        return auditEventRepository.findByTimestampBetween(startOfDay, endOfDay, pageable);
+    }
 
-            if (query.getDay() != null) {
-                Instant startOfDay = query.getDay().atStartOfDay(ZoneOffset.UTC).toInstant();
-                Instant endOfDay = query.getDay().plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
-                predicates.add(builder.between(root.get("timestamp"), startOfDay, endOfDay));
-            }
+    @Override
+    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByServiceName(@NonNull String serviceName, @NonNull Pageable pageable) {
+        return auditEventRepository.findByServiceName(serviceName, pageable);
+    }
 
-            if (query.getServiceName() != null && !query.getServiceName().isBlank()) {
-                predicates.add(builder.equal(root.get("serviceName"), query.getServiceName()));
-            }
+    @Override
+    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByActorUserId(@NonNull Long actorUserId, @NonNull Pageable pageable) {
+        return auditEventRepository.findByActorUserId(actorUserId, pageable);
+    }
 
-            if (query.getActorUserId() != null) {
-                predicates.add(builder.equal(root.get("actorUserId"), query.getActorUserId()));
-            }
+    @Override
+    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByActorUsername(@NonNull String actorUsername, @NonNull Pageable pageable) {
+        return auditEventRepository.findByActorUsername(actorUsername, pageable);
+    }
 
-            if (query.getActorUsername() != null && !query.getActorUsername().isBlank()) {
-                predicates.add(builder.equal(root.get("actorUsername"), query.getActorUsername()));
-            }
+    @Override
+    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByAction(@NonNull String action, @NonNull Pageable pageable) {
+        return auditEventRepository.findByAction(action, pageable);
+    }
 
-            if (query.getAction() != null && !query.getAction().isBlank()) {
-                predicates.add(builder.equal(root.get("action"), query.getAction()));
-            }
-
-            if (query.getResult() != null) {
-                predicates.add(builder.equal(root.get("result"), query.getResult()));
-            }
-
-            return builder.and(predicates.toArray(new Predicate[0]));
-        };
+    @Override
+    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByResult(@NonNull Boolean result, @NonNull Pageable pageable) {
+        return auditEventRepository.findByResult(result, pageable);
     }
 }

@@ -46,5 +46,24 @@ services:
       timeout: 5s
       retries: 20
 
+  minio:
+    image: minio/minio:RELEASE.2024-08-03T04-33-23Z
+    container_name: firstspringboot-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mariadb_data:
+  minio_data:

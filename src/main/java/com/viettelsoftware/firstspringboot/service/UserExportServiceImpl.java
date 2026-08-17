@@ -13,6 +13,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -27,9 +30,13 @@ public class UserExportServiceImpl implements UserExportService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private MinIOStorageService minIOStorageService;
+
     @Override
-    public byte[] exportUsers() {
+    public @NonNull String exportUsers() {
         List<User> users = userService.getUsers();
+        byte[] excelBytes;
         try (InputStream inputStream = getClass().getResourceAsStream("/templates/users_template.xlsx");
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             if (inputStream == null) {
@@ -40,13 +47,23 @@ public class UserExportServiceImpl implements UserExportService {
             context.putVar("users", users);
 
             JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
-
-            audit("EXPORT_USERS");
-            return outputStream.toByteArray();
+            excelBytes = outputStream.toByteArray();
 
         } catch (IOException exception) {
             throw new RuntimeException("Failed to export users to Excel", exception);
         }
+
+        String timestamp = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        String objectName = String.format("users-%s.xlsx", timestamp);
+
+        String presignedUrl = minIOStorageService.uploadFileAndGetPresignedUrl(
+                objectName,
+                excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+
+        audit("EXPORT_USERS");
+        return presignedUrl;
     }
 
     private void audit(@NonNull String action) {

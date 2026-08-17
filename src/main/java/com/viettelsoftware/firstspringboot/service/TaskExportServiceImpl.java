@@ -13,6 +13,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -27,9 +30,13 @@ public class TaskExportServiceImpl implements TaskExportService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private MinIOStorageService minIOStorageService;
+
     @Override
-    public byte[] exportTasks() {
+    public @NonNull String exportTasks() {
         List<Task> tasks = taskService.getTasks();
+        byte[] excelBytes;
         try (InputStream inputStream = getClass().getResourceAsStream("/templates/tasks_template.xlsx");
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             if (inputStream == null) {
@@ -40,13 +47,23 @@ public class TaskExportServiceImpl implements TaskExportService {
             context.putVar("tasks", tasks);
 
             JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
-
-            audit("EXPORT_TASKS");
-            return outputStream.toByteArray();
+            excelBytes = outputStream.toByteArray();
 
         } catch (IOException exception) {
             throw new RuntimeException("Failed to export tasks to Excel", exception);
         }
+
+        String timestamp = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        String objectName = String.format("tasks-%s.xlsx", timestamp);
+
+        String presignedUrl = minIOStorageService.uploadFileAndGetPresignedUrl(
+                objectName,
+                excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+
+        audit("EXPORT_TASKS");
+        return presignedUrl;
     }
 
     private void audit(@NonNull String action) {

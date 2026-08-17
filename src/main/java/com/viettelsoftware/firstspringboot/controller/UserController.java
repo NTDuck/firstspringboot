@@ -7,19 +7,13 @@ import com.viettelsoftware.firstspringboot.service.AuthService;
 import com.viettelsoftware.firstspringboot.service.UserExportService;
 import com.viettelsoftware.firstspringboot.service.UserService;
 import lombok.NonNull;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -37,7 +31,7 @@ public class UserController {
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     public @NonNull GetUserResponse profile() {
-        val currentUser = authService.getCurrentUser();
+        var currentUser = authService.getCurrentUser();
         assert currentUser != null;
 
         return GetUserResponse.builder()
@@ -54,23 +48,15 @@ public class UserController {
 
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
-    public ResponseEntity<byte[]> exportUsers() {
-        val excelBytes = userExportService.exportUsers();
-
-        val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ISO_DATE_TIME);
-        val filename = String.format("users-%s.xlsx", timestamp);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", filename))
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(excelBytes);
+    public Map<@NonNull String, @NonNull String> exportUsers() {
+        String url = userExportService.exportUsers();
+        return Map.of("url", url);
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('REALM_ROLE_USER_CREATE') and hasAuthority('REALM_ROLE_POST')")
     public @NonNull User createUser(@Valid @RequestBody @NonNull CreateUserRequest request) {
-        val user = User.builder()
+        User user = User.builder()
                 .keycloakId(request.getKeycloakId())
                 .name(request.getName())
                 .email(request.getEmail())

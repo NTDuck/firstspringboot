@@ -1,10 +1,8 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.dto.AuditQuery;
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.service.AuditService;
 import lombok.NonNull;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,15 +30,6 @@ public class AuditController {
             @RequestParam(required = false) Boolean result,
             Pageable pageable) {
 
-        val query = AuditQuery.builder()
-                .day(day)
-                .serviceName(serviceName)
-                .actorUserId(actorUserId)
-                .actorUsername(actorUsername)
-                .action(action)
-                .result(result)
-                .build();
-
-        return auditService.search(query, pageable);
+        return auditService.search(day, serviceName, actorUserId, actorUsername, action, result, pageable);
     }
 }

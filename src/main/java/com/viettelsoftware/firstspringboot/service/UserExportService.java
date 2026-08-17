@@ -1,5 +1,7 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import lombok.NonNull;
+
 public interface UserExportService {
-    byte[] exportUsers();
+    @NonNull String exportUsers();
 }

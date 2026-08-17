@@ -1,5 +1,7 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import lombok.NonNull;
+
 public interface TaskExportService {
-    byte[] exportTasks();
+    @NonNull String exportTasks();
 }

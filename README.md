@@ -1,18 +1,18 @@
 # firstspringboot
 
-## How to Run
+## Infrastructure Setup
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ./mvnw spring-boot:run
 ```
 
-## How to Obtain Access Token (JWT) from Keycloak
+## Authentication
 
-To fetch a fresh, unexpired access token:
+Obtain JWT access token from Keycloak:
 
 ```bash
-EXPORT_TOKEN=$(curl -s -X POST "http://localhost:8081/realms/firstspringbootrealm/protocol/openid-connect/token" \
+TOKEN=$(curl -s -X POST "http://localhost:8081/realms/firstspringbootrealm/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=firstspringbootauthclient" \
@@ -21,22 +21,73 @@ EXPORT_TOKEN=$(curl -s -X POST "http://localhost:8081/realms/firstspringbootreal
   -d "password=firstspringbootuserpassword" | jq -r .access_token)
 ```
 
-> **Note:** If an expired or invalid JWT token is passed, Spring Security returns `HTTP 401 Unauthorized` with an empty response body (`Content-Length: 0`), resulting in a 0-byte downloaded file when saving output with `curl -o`. Always ensure you use a fresh access token.
+## API Routes Verification
 
-## How to Export Excel Files
-
-### Export Tasks (`tasks-export.xlsx`)
+### System & Health
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/tasks/export" \
-  -H "Authorization: Bearer $EXPORT_TOKEN" \
-  -o tasks-export.xlsx
+# Health Status
+curl -s http://localhost:8080/actuator/health
+
+# Ping
+curl -s http://localhost:8080/api/v1/ping
 ```
 
-### Export Users (`users-export.xlsx`)
+### User Management
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/users/export" \
-  -H "Authorization: Bearer $EXPORT_TOKEN" \
-  -o users-export.xlsx
+# Get User Profile
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/users/profile
+
+# List Users
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/users
+
+# Create User
+curl -s -X POST http://localhost:8080/api/v1/users \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"keycloakId":"kc-101","name":"John Doe","email":"john@example.com","firstName":"John","lastName":"Doe"}'
+
+# Export Users to MinIO (Returns Presigned URL)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/users/export
+```
+
+### Task Management
+
+```bash
+# List Tasks
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/tasks
+
+# Create Task
+curl -s -X POST http://localhost:8080/api/v1/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Sample task description"}'
+
+# Get Task by ID
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/tasks/1
+
+# Update Task by ID
+curl -s -X PUT http://localhost:8080/api/v1/tasks/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Updated task description"}'
+
+# Export Tasks to MinIO (Returns Presigned URL)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/tasks/export
+
+# Delete Task by ID
+curl -s -X DELETE http://localhost:8080/api/v1/tasks/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+# Delete All Tasks
+curl -s -X DELETE http://localhost:8080/api/v1/tasks \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Audit Logs
+
+```bash
+# Query Audit Logs (Supports day, serviceName, actorUserId, actorUsername, action, result params)
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/audit?serviceName=UserService"
 ```
