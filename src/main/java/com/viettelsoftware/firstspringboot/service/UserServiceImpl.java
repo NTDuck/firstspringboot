@@ -1,5 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
 import lombok.NonNull;
@@ -12,6 +13,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +23,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AuditService auditService;
 
     @Value("${keycloak.admin.server-url}")
     private String keycloakServerUrl;
@@ -87,7 +92,7 @@ public class UserServiceImpl implements UserService {
         }
 
         final User finalUserToSave = userToSave;
-        return userRepository.findByKeycloakId(finalUserToSave.getKeycloakId())
+        User saved = userRepository.findByKeycloakId(finalUserToSave.getKeycloakId())
                 .map(existing -> {
                     existing.setName(finalUserToSave.getName());
                     existing.setEmail(finalUserToSave.getEmail());
@@ -96,6 +101,16 @@ public class UserServiceImpl implements UserService {
                     return userRepository.save(existing);
                 })
                 .orElseGet(() -> userRepository.save(finalUserToSave));
+
+        auditService.audit(AuditEvent.builder()
+                .timestamp(Instant.now())
+                .serviceName("UserService")
+                .actorUserId(saved.getId())
+                .action("CREATE_USER")
+                .result(true)
+                .build());
+
+        return saved;
     }
 
     private String getAdminAccessToken() {

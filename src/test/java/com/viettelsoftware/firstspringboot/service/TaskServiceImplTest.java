@@ -20,9 +20,11 @@ class TaskServiceImplTest {
     @Mock
     private TaskRepository taskRepository;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private TaskServiceImpl taskService;
-
     @Test
     void testGetTasks() {
         Task task = Task.builder().id(1L).description("Test Task").build();

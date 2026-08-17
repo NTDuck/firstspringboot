@@ -40,8 +40,7 @@ public class TaskController {
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportTasks() {
-        val tasks = taskService.getTasks();
-        val excelBytes = taskExportService.exportTasks(tasks);
+        val excelBytes = taskExportService.exportTasks();
 
         val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ISO_DATE_TIME);

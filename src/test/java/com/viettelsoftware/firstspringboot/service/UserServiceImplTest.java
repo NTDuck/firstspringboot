@@ -20,9 +20,11 @@ class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private AuditService auditService;
+
     @InjectMocks
     private UserServiceImpl userService;
-
     @Test
     void testGetUsers() {
         User u = User.builder()

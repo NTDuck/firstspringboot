@@ -1,0 +1,46 @@
+package com.viettelsoftware.firstspringboot.controller;
+
+import com.viettelsoftware.firstspringboot.dto.AuditQuery;
+import com.viettelsoftware.firstspringboot.entity.AuditEvent;
+import com.viettelsoftware.firstspringboot.service.AuditService;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+
+@RestController
+@RequestMapping("/api/v1/audit")
+public class AuditController {
+
+    @Autowired
+    private AuditService auditService;
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('REALM_ROLE_AUDIT')")
+    public @NonNull Page<@NonNull AuditEvent> search(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day,
+            @RequestParam(required = false) String serviceName,
+            @RequestParam(required = false) Long actorUserId,
+            @RequestParam(required = false) String actorUsername,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) Boolean result,
+            Pageable pageable) {
+
+        val query = AuditQuery.builder()
+                .day(day)
+                .serviceName(serviceName)
+                .actorUserId(actorUserId)
+                .actorUsername(actorUsername)
+                .action(action)
+                .result(result)
+                .build();
+
+        return auditService.search(query, pageable);
+    }
+}

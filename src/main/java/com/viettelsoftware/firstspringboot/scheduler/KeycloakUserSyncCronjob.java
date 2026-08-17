@@ -3,6 +3,7 @@ package com.viettelsoftware.firstspringboot.scheduler;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.service.UserService;
 import lombok.NonNull;
+import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ public class KeycloakUserSyncCronjob {
     public void syncKeycloakUsers() {
         try {
             logger.info("Starting Keycloak user synchronization...");
-            String token = getAdminAccessToken();
+            val token = getAdminAccessToken();
             if (token == null || token.isBlank()) {
                 logger.warn("Failed to obtain Keycloak admin access token.");
                 return;
@@ -66,18 +67,18 @@ public class KeycloakUserSyncCronjob {
             }
 
             for (Map<String, Object> userMap : keycloakUsers) {
-                String keycloakId = extractString(userMap, "id");
+                val keycloakId = extractString(userMap, "id");
                 if (keycloakId.isBlank()) {
                     continue;
                 }
 
-                String username = extractString(userMap, "username");
-                String email = extractString(userMap, "email");
-                String firstName = extractString(userMap, "firstName");
-                String lastName = extractString(userMap, "lastName");
-                String name = !username.isBlank() ? username : (firstName + " " + lastName).trim();
+                val username = extractString(userMap, "username");
+                val email = extractString(userMap, "email");
+                val firstName = extractString(userMap, "firstName");
+                val lastName = extractString(userMap, "lastName");
+                val name = !username.isBlank() ? username : (firstName + " " + lastName).trim();
 
-                User user = User.builder()
+                val user = User.builder()
                         .keycloakId(keycloakId)
                         .name(name)
                         .email(email)
@@ -94,8 +95,8 @@ public class KeycloakUserSyncCronjob {
     }
 
     private String extractString(Map<String, Object> map, String key) {
-        Object val = map.getOrDefault(key, "");
-        return val != null ? val.toString() : "";
+        val valObj = map.getOrDefault(key, "");
+        return valObj != null ? valObj.toString() : "";
     }
 
     private String getAdminAccessToken() {
@@ -115,7 +116,7 @@ public class KeycloakUserSyncCronjob {
                 tokenUrl, HttpMethod.POST, request, new ParameterizedTypeReference<Map<String, Object>>() {});
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            Object tokenObj = response.getBody().get("access_token");
+            val tokenObj = response.getBody().get("access_token");
             return tokenObj != null ? tokenObj.toString() : null;
         }
         return null;

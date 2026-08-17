@@ -53,8 +53,7 @@ public class UserController {
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     public ResponseEntity<byte[]> exportUsers() {
-        val users = userService.getUsers();
-        val excelBytes = userExportService.exportUsers(users);
+        val excelBytes = userExportService.exportUsers();
 
         val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ISO_DATE_TIME);

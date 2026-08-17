@@ -1,28 +1,39 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.entity.Task;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class TaskExportServiceImplTest {
 
-    private final TaskExportService taskExportService = new TaskExportServiceImpl();
+    @Mock
+    private TaskService taskService;
+
+    @InjectMocks
+    private TaskExportServiceImpl taskExportService;
 
     @Test
     void testExportTasksContent() throws Exception {
         Task t1 = Task.builder().id(100L).description("First Task").build();
         Task t2 = Task.builder().id(200L).description("Second Task").build();
 
-        byte[] result = taskExportService.exportTasks(List.of(t1, t2));
+        when(taskService.getTasks()).thenReturn(List.of(t1, t2));
+
+        byte[] result = taskExportService.exportTasks();
 
         assertNotNull(result);
         assertTrue(result.length > 0, "Byte array length must be > 0");

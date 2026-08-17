@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="3" author="firstspringbootmariadbuser">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="audit_events"/>
+            </not>
+        </preConditions>
+        <createTable tableName="audit_events">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="timestamp" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="service_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="actor_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="actor_username" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exception" type="text"/>
+        </createTable>
+
+        <createIndex indexName="idx_audit_service_timestamp" tableName="audit_events">
+            <column name="service_name"/>
+            <column name="timestamp"/>
+        </createIndex>
+
+        <createIndex indexName="idx_audit_actor_timestamp" tableName="audit_events">
+            <column name="actor_user_id"/>
+            <column name="timestamp"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

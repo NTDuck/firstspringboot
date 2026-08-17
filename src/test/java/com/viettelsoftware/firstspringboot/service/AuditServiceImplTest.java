@@ -1,0 +1,86 @@
+package com.viettelsoftware.firstspringboot.service;
+
+import com.viettelsoftware.firstspringboot.dto.AuditQuery;
+import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.entity.AuditEvent;
+import com.viettelsoftware.firstspringboot.repository.AuditEventRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AuditServiceImplTest {
+
+    @Mock
+    private AuditEventRepository auditEventRepository;
+
+    @Mock
+    private AuthService authService;
+
+    @InjectMocks
+    private AuditServiceImpl auditService;
+
+    @Test
+    void testAuditSuccess() {
+        CurrentUser user = CurrentUser.builder().id("u1").name("admin").roles(List.of()).build();
+        when(authService.getCurrentUser()).thenReturn(user);
+
+        AuditEvent event = AuditEvent.builder()
+                .serviceName("TestService")
+                .actorUserId(1L)
+                .action("TEST_ACTION")
+                .result(true)
+                .build();
+
+        auditService.audit(event);
+
+        assertNotNull(event.getTimestamp());
+        assertEquals("admin", event.getActorUsername());
+        verify(auditEventRepository, times(1)).save(event);
+    }
+
+    @Test
+    void testSearchAuditLogs() {
+        AuditEvent event = AuditEvent.builder()
+                .id(1L)
+                .timestamp(Instant.now())
+                .serviceName("TaskService")
+                .actorUserId(1L)
+                .actorUsername("admin")
+                .action("CREATE_TASK")
+                .result(true)
+                .build();
+
+        PageImpl<AuditEvent> page = new PageImpl<>(List.of(event));
+        when(auditEventRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+
+        AuditQuery query = AuditQuery.builder()
+                .day(LocalDate.now())
+                .serviceName("TaskService")
+                .actorUserId(1L)
+                .actorUsername("admin")
+                .action("CREATE_TASK")
+                .result(true)
+                .build();
+
+        Page<AuditEvent> result = auditService.search(query, PageRequest.of(0, 10));
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+    }
+}

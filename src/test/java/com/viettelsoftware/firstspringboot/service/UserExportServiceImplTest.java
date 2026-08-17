@@ -6,15 +6,25 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class UserExportServiceImplTest {
 
-    private final UserExportService userExportService = new UserExportServiceImpl();
+    @Mock
+    private UserService userService;
+
+    @InjectMocks
+    private UserExportServiceImpl userExportService;
 
     @Test
     void testExportUsersContent() throws Exception {
@@ -27,7 +37,9 @@ class UserExportServiceImplTest {
                 .lastName("Doe")
                 .build();
 
-        byte[] result = userExportService.exportUsers(List.of(u1));
+        when(userService.getUsers()).thenReturn(List.of(u1));
+
+        byte[] result = userExportService.exportUsers();
 
         assertNotNull(result);
         assertTrue(result.length > 0, "Exported byte array must not be empty");
