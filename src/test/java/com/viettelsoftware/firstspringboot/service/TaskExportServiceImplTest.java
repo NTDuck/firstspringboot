@@ -1,6 +1,8 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.entity.Task;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -28,9 +30,21 @@ class TaskExportServiceImplTest {
         try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(result))) {
             Sheet sheet = workbook.getSheetAt(0);
             assertNotNull(sheet, "Sheet 0 must exist");
-            int lastRowNum = sheet.getLastRowNum();
-            System.err.println("Last row num: " + lastRowNum);
-            assertTrue(lastRowNum >= 1, "Must have header + data rows");
+
+            // Row 0: Headers
+            Row headerRow = sheet.getRow(0);
+            assertEquals("ID", headerRow.getCell(0).getStringCellValue());
+            assertEquals("Description", headerRow.getCell(1).getStringCellValue());
+
+            // Row 1: Task 1
+            Row r1 = sheet.getRow(1);
+            assertNotNull(r1, "Row 1 must exist");
+            assertEquals("First Task", r1.getCell(1).getStringCellValue());
+
+            // Row 2: Task 2
+            Row r2 = sheet.getRow(2);
+            assertNotNull(r2, "Row 2 must exist");
+            assertEquals("Second Task", r2.getCell(1).getStringCellValue());
         }
     }
 }

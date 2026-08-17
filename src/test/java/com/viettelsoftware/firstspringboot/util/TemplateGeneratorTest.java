@@ -37,7 +37,7 @@ class TemplateGeneratorTest {
             ClientAnchor a0 = factory.createClientAnchor();
             a0.setCol1(0); a0.setCol2(2); a0.setRow1(0); a0.setRow2(2);
             Comment com0 = drawing.createCellComment(a0);
-            com0.setString(factory.createRichTextString("jx:area(bx=\"A1:B2\")"));
+            com0.setString(factory.createRichTextString("jx:area(lastCell=\"B2\")"));
             c00.setCellComment(com0);
 
             ClientAnchor a1 = factory.createClientAnchor();
@@ -76,7 +76,7 @@ class TemplateGeneratorTest {
             ClientAnchor a0 = factory.createClientAnchor();
             a0.setCol1(0); a0.setCol2(2); a0.setRow1(0); a0.setRow2(2);
             Comment com0 = drawing.createCellComment(a0);
-            com0.setString(factory.createRichTextString("jx:area(bx=\"A1:F2\")"));
+            com0.setString(factory.createRichTextString("jx:area(lastCell=\"F2\")"));
             r0.getCell(0).setCellComment(com0);
 
             ClientAnchor a1 = factory.createClientAnchor();

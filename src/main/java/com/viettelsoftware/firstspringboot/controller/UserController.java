@@ -3,6 +3,7 @@ package com.viettelsoftware.firstspringboot.controller;
 import com.viettelsoftware.firstspringboot.dto.CreateUserRequest;
 import com.viettelsoftware.firstspringboot.dto.GetUserResponse;
 import com.viettelsoftware.firstspringboot.entity.User;
+import com.viettelsoftware.firstspringboot.service.AuthService;
 import com.viettelsoftware.firstspringboot.service.UserExportService;
 import com.viettelsoftware.firstspringboot.service.UserService;
 import lombok.NonNull;
@@ -12,9 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -22,7 +20,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -34,18 +31,16 @@ public class UserController {
     @Autowired
     private UserExportService userExportService;
 
+    @Autowired
+    private AuthService authService;
+
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
-    public @NonNull GetUserResponse profile(@NonNull JwtAuthenticationToken auth) {
+    public @NonNull GetUserResponse profile() {
+        val currentUser = authService.getCurrentUser();
         return GetUserResponse.builder()
-                .name(auth
-                        .getToken()
-                        .getClaimAsString(StandardClaimNames.PREFERRED_USERNAME))
-                .roles(auth
-                        .getAuthorities()
-                        .stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toList()))
+                .name(currentUser.getName())
+                .roles(currentUser.getRoles())
                 .build();
     }
 

@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -49,7 +50,7 @@ class EndToEndIntegrationTest {
         mockMvc.perform(get("/api/v1/tasks/export")
                         .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", "attachment; filename=\"tasks.xlsx\""))
+                .andExpect(header().string("Content-Disposition", startsWith("attachment; filename=\"tasks-")))
                 .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
     }
 
@@ -90,7 +91,7 @@ class EndToEndIntegrationTest {
         mockMvc.perform(get("/api/v1/users/export")
                         .with(jwt().authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", "attachment; filename=\"users.xlsx\""))
+                .andExpect(header().string("Content-Disposition", startsWith("attachment; filename=\"users-")))
                 .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
     }
 }

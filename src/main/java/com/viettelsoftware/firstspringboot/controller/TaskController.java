@@ -45,7 +45,7 @@ public class TaskController {
 
         val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ISO_DATE_TIME);
-        val filename = String.format("users-%s.xlsx", timestamp);
+        val filename = String.format("tasks-%s.xlsx", timestamp);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", filename))

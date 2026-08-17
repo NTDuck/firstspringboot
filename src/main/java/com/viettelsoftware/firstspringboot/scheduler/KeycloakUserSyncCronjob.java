@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,26 +28,27 @@ public class KeycloakUserSyncCronjob {
     @Autowired
     private UserService userService;
 
-    @Value("${keycloak.admin.server-url:http://localhost:8081}")
+    @Value("${keycloak.admin.server-url}")
     private String keycloakServerUrl;
 
-    @Value("${keycloak.admin.realm:master}")
+    @Value("${keycloak.admin.realm}")
     private String adminRealm;
 
-    @Value("${keycloak.admin.target-realm:firstspringbootrealm}")
+    @Value("${keycloak.admin.target-realm}")
     private String targetRealm;
 
-    @Value("${keycloak.admin.username:firstspringbootkeycloakadmin}")
+    @Value("${keycloak.admin.username}")
     private String adminUsername;
 
-    @Value("${keycloak.admin.password:firstspringbootkeycloakadminpassword}")
+    @Value("${keycloak.admin.password}")
     private String adminPassword;
 
-    @Value("${keycloak.admin.client-id:admin-cli}")
+    @Value("${keycloak.admin.client-id}")
     private String adminClientId;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @EventListener(ApplicationReadyEvent.class)
     @Scheduled(cron = "${keycloak.sync.cron:0 */5 * * * *}")
     public void syncKeycloakUsers() {
         try {
@@ -57,21 +60,21 @@ public class KeycloakUserSyncCronjob {
             }
 
             List<Map<String, Object>> keycloakUsers = fetchKeycloakUsers(token);
-            if (keycloakUsers == null) {
+            if (keycloakUsers == null || keycloakUsers.isEmpty()) {
                 logger.warn("No Keycloak users returned or error occurred during fetch.");
                 return;
             }
 
             for (Map<String, Object> userMap : keycloakUsers) {
-                String keycloakId = userMap.get("id") != null ? String.valueOf(userMap.get("id")) : "";
+                String keycloakId = extractString(userMap, "id");
                 if (keycloakId.isBlank()) {
                     continue;
                 }
 
-                String username = userMap.get("username") != null ? String.valueOf(userMap.get("username")) : "";
-                String email = userMap.get("email") != null ? String.valueOf(userMap.get("email")) : "";
-                String firstName = userMap.get("firstName") != null ? String.valueOf(userMap.get("firstName")) : "";
-                String lastName = userMap.get("lastName") != null ? String.valueOf(userMap.get("lastName")) : "";
+                String username = extractString(userMap, "username");
+                String email = extractString(userMap, "email");
+                String firstName = extractString(userMap, "firstName");
+                String lastName = extractString(userMap, "lastName");
                 String name = !username.isBlank() ? username : (firstName + " " + lastName).trim();
 
                 User user = User.builder()
@@ -90,6 +93,11 @@ public class KeycloakUserSyncCronjob {
         }
     }
 
+    private String extractString(Map<String, Object> map, String key) {
+        Object val = map.getOrDefault(key, "");
+        return val != null ? val.toString() : "";
+    }
+
     private String getAdminAccessToken() {
         String tokenUrl = keycloakServerUrl + "/realms/" + adminRealm + "/protocol/openid-connect/token";
 
@@ -99,6 +107,9 @@ public class KeycloakUserSyncCronjob {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("grant_type", "password");
         map.add("client_id", adminClientId);
+        map.add("username", adminUsername);
+        map.add("password", adminPassword);
+
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                 tokenUrl, HttpMethod.POST, request, new ParameterizedTypeReference<Map<String, Object>>() {});
@@ -110,7 +121,6 @@ public class KeycloakUserSyncCronjob {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> fetchKeycloakUsers(String token) {
         String usersUrl = keycloakServerUrl + "/admin/realms/" + targetRealm + "/users";
 
