@@ -29,17 +29,6 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     public void audit(@NonNull AuditEvent event) {
-        if (event.getTimestamp() == null) {
-            event.setTimestamp(Instant.now());
-        }
-
-        if (event.getActorUsername() == null || event.getActorUsername().isBlank()) {
-            CurrentUser currentUser = authService.getCurrentUser();
-            if (currentUser != null && currentUser.getName() != null && !currentUser.getName().isBlank()) {
-                event.setActorUsername(currentUser.getName());
-            }
-        }
-
         auditEventRepository.save(event);
     }
 

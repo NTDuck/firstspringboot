@@ -37,12 +37,12 @@ class AuditServiceImplTest {
 
     @Test
     void testAuditSuccess() {
-        CurrentUser user = CurrentUser.builder().id("u1").name("admin").roles(List.of()).build();
-        when(authService.getCurrentUser()).thenReturn(user);
+        CurrentUser user = CurrentUser.builder().id(1L).name("admin").roles(List.of()).build();
 
         AuditEvent event = AuditEvent.builder()
                 .serviceName("TestService")
                 .actorUserId(1L)
+                .actorUsername("admin")
                 .action("TEST_ACTION")
                 .result(true)
                 .build();

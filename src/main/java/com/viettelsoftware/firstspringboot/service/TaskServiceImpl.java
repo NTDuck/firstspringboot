@@ -1,10 +1,10 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import com.viettelsoftware.firstspringboot.dto.CurrentUser;
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import lombok.NonNull;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,14 +50,13 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public @NonNull Task createTask(@NonNull Task task) {
         Task created = taskRepository.save(task);
-
         audit("CREATE_TASK");
         return created;
     }
 
     @Override
     public @NonNull Optional<@NonNull Task> updateTask(@NonNull long taskId, @NonNull String description) {
-        val updatedTask = taskRepository.findById(taskId)
+        Optional<Task> updatedTask = taskRepository.findById(taskId)
                 .map(task -> taskRepository.save(task.withDescription(description)));
 
         audit("UPDATE_TASK");
@@ -77,10 +76,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void audit(@NonNull String action) {
-        val currentUser = authService.getCurrentUser();
-        assert currentUser != null;
+        CurrentUser currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return;
+        }
 
-        val auditEvent = AuditEvent.builder()
+        AuditEvent auditEvent = AuditEvent.builder()
                 .serviceName(TaskService.class.getSimpleName())
                 .actorUserId(currentUser.getId())
                 .actorUsername(currentUser.getName())

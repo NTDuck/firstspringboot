@@ -31,7 +31,6 @@ public class AuditEvent {
     @Column(name = "actor_user_id", nullable = false)
     private @NonNull long actorUserId;
 
-    @Builder.Default
     @Column(name = "actor_username", nullable = false)
     private @NonNull String actorUsername;
 

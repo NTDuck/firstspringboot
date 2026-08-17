@@ -1,5 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import com.viettelsoftware.firstspringboot.dto.CurrentUser;
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
@@ -13,7 +14,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +26,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private AuditService auditService;
+
+    @Autowired
+    private AuthService authService;
 
     @Value("${keycloak.admin.server-url}")
     private String keycloakServerUrl;
@@ -49,11 +52,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<@NonNull User> getUsers() {
+        audit("GET_USERS");
         return userRepository.findAll();
     }
 
     @Override
     public Optional<@NonNull User> getUserByKeycloakUserId(@NonNull String keycloakUserId) {
+        audit("GET_USER_BY_KEYCLOAK_USER_ID");
         return userRepository.findByKeycloakId(keycloakUserId);
     }
 
@@ -102,14 +107,7 @@ public class UserServiceImpl implements UserService {
                 })
                 .orElseGet(() -> userRepository.save(finalUserToSave));
 
-        auditService.audit(AuditEvent.builder()
-                .timestamp(Instant.now())
-                .serviceName("UserService")
-                .actorUserId(saved.getId())
-                .action("CREATE_USER")
-                .result(true)
-                .build());
-
+        audit("CREATE_USER");
         return saved;
     }
 
@@ -137,5 +135,23 @@ public class UserServiceImpl implements UserService {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    private void audit(@NonNull String action) {
+        CurrentUser currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        AuditEvent auditEvent = AuditEvent.builder()
+                .serviceName(UserService.class.getSimpleName())
+                .actorUserId(currentUser.getId())
+                .actorUsername(currentUser.getName())
+                .action(action)
+                .result(true)
+                .exception(null)
+                .build();
+
+        auditService.audit(auditEvent);
     }
 }

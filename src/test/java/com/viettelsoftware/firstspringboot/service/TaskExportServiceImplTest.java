@@ -1,10 +1,12 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import com.viettelsoftware.firstspringboot.dto.CurrentUser;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,7 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TaskExportServiceImplTest {
@@ -23,8 +25,19 @@ class TaskExportServiceImplTest {
     @Mock
     private TaskService taskService;
 
+    @Mock
+    private AuditService auditService;
+
+    @Mock
+    private AuthService authService;
+
     @InjectMocks
     private TaskExportServiceImpl taskExportService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(authService.getCurrentUser()).thenReturn(CurrentUser.builder().id(1L).name("testuser").roles(List.of()).build());
+    }
 
     @Test
     void testExportTasksContent() throws Exception {

@@ -39,6 +39,7 @@ class EndToEndIntegrationTest {
     void testProfileEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/users/profile")
                         .with(jwt().jwt(jwt -> jwt
+                                        .claim("sub", "1")
                                         .claim("preferred_username", "testuser")
                                         .claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
@@ -49,12 +50,12 @@ class EndToEndIntegrationTest {
     @Test
     void testGetTasksAndExport() throws Exception {
         mockMvc.perform(get("/api/v1/tasks")
-                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/tasks/export")
-                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", startsWith("attachment; filename=\"tasks-")))
@@ -68,7 +69,7 @@ class EndToEndIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/tasks")
-                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidReq)))
@@ -86,7 +87,7 @@ class EndToEndIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/users")
-                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST", "REALM_ROLE_USER_CREATE"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST", "REALM_ROLE_USER_CREATE"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"), new SimpleGrantedAuthority("REALM_ROLE_USER_CREATE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
@@ -94,12 +95,12 @@ class EndToEndIntegrationTest {
                 .andExpect(jsonPath("$.keycloakId").exists());
 
         mockMvc.perform(get("/api/v1/users")
-                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/users/export")
-                        .with(jwt().jwt(jwt -> jwt.claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", startsWith("attachment; filename=\"users-")))

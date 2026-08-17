@@ -4,7 +4,6 @@ import com.viettelsoftware.firstspringboot.dto.CurrentUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -33,7 +32,7 @@ class AuthServiceImplTest {
                 Instant.now(),
                 Instant.now().plusSeconds(3600),
                 Map.of("alg", "none"),
-                Map.of("sub", "sub-123", "preferred_username", "testuser")
+                Map.of("sub", "123", "preferred_username", "testuser")
         );
         JwtAuthenticationToken auth = new JwtAuthenticationToken(
                 jwt,
@@ -44,18 +43,8 @@ class AuthServiceImplTest {
         CurrentUser currentUser = authService.getCurrentUser();
 
         assertNotNull(currentUser);
-        assertEquals("sub-123", currentUser.getId());
+        assertEquals(123L, currentUser.getId());
         assertEquals("testuser", currentUser.getName());
         assertEquals(List.of("REALM_ROLE_GET"), currentUser.getRoles());
-    }
-
-    @Test
-    void testGetCurrentUserUnauthenticated() {
-        CurrentUser currentUser = authService.getCurrentUser();
-
-        assertNotNull(currentUser);
-        assertEquals("", currentUser.getId());
-        assertEquals("", currentUser.getName());
-        assertTrue(currentUser.getRoles().isEmpty());
     }
 }

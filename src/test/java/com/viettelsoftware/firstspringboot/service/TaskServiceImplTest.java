@@ -1,7 +1,9 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import com.viettelsoftware.firstspringboot.dto.CurrentUser;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,8 +25,17 @@ class TaskServiceImplTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private AuthService authService;
+
     @InjectMocks
     private TaskServiceImpl taskService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(authService.getCurrentUser()).thenReturn(CurrentUser.builder().id(1L).name("testuser").roles(List.of()).build());
+    }
+
     @Test
     void testGetTasks() {
         Task task = Task.builder().id(1L).description("Test Task").build();
