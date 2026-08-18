@@ -1,20 +1,25 @@
 package com.viettelsoftware.firstspringboot.controller;
 
+import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
 import com.viettelsoftware.firstspringboot.dto.CreateUserRequest;
 import com.viettelsoftware.firstspringboot.dto.GetUserResponse;
+import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.service.AuthService;
-import com.viettelsoftware.firstspringboot.service.UserExportService;
+import com.viettelsoftware.firstspringboot.service.ExportService;
 import com.viettelsoftware.firstspringboot.service.UserService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-import java.util.List;
-import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.net.URI;
+import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
@@ -23,7 +28,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private UserExportService userExportService;
+    private ExportService exportService;
 
     @Autowired
     private AuthService authService;
@@ -48,9 +53,11 @@ public class UserController {
 
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
-    public Map<@NonNull String, @NonNull String> exportUsers() {
-        String url = userExportService.exportUsers();
-        return Map.of("url", url);
+    public ResponseEntity<Void> exportUsers() {
+        Export export = exportService.create(CreateExportRequest.of(Export.Type.USER));
+        return ResponseEntity.accepted()
+                .location(URI.create(String.format("/api/v1/exports/%d", export.getId())))
+                .build();
     }
 
     @PostMapping

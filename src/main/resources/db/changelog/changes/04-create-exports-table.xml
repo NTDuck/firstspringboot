@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="4" author="firstspringbootmariadbuser">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="exports"/>
+            </not>
+        </preConditions>
+        <createTable tableName="exports">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_by_username" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_elapsed" type="bigint"/>
+            <column name="completed_at" type="timestamp(6)"/>
+            <column name="url" type="text"/>
+        </createTable>
+
+        <createIndex indexName="idx_exports_status_created" tableName="exports">
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

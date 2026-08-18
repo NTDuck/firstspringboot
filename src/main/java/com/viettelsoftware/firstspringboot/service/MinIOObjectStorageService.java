@@ -8,9 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.time.Duration;
 
 @Service
-public class MinIOStorageServiceImpl implements MinIOStorageService, InitializingBean {
+public class MinIOObjectStorageService implements ObjectStorageService, InitializingBean {
 
     @Value("${minio.url}")
     private String minioUrl;
@@ -35,7 +36,7 @@ public class MinIOStorageServiceImpl implements MinIOStorageService, Initializin
     }
 
     @Override
-    public @NonNull String uploadFileAndGetPresignedUrl(@NonNull String objectName, byte @NonNull [] content, @NonNull String contentType) {
+    public void put(@NonNull String objectKey, byte @NonNull [] file, @NonNull String contentType) {
         try {
             boolean bucketExists = minioClient.bucketExists(
                     BucketExistsArgs.builder().bucket(bucketName).build()
@@ -49,22 +50,44 @@ public class MinIOStorageServiceImpl implements MinIOStorageService, Initializin
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(objectName)
-                            .stream(new ByteArrayInputStream(content), content.length, -1)
+                            .object(objectKey)
+                            .stream(new ByteArrayInputStream(file), file.length, -1)
                             .contentType(contentType)
-                            .build()
-            );
-
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(7 * 24 * 3600)
                             .build()
             );
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload file to MinIO", e);
+        }
+    }
+
+    @Override
+    public void delete(@NonNull String objectKey) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectKey)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete file from MinIO", e);
+        }
+    }
+
+    @Override
+    public @NonNull String createPresignedDownloadUrl(@NonNull String objectKey, @NonNull Duration expiration) {
+        try {
+            int expirySeconds = (int) Math.max(1, Math.min(expiration.getSeconds(), 7 * 24 * 3600));
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(objectKey)
+                            .expiry(expirySeconds)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate presigned download URL from MinIO", e);
         }
     }
 }

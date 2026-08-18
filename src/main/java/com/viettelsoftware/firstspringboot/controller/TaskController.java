@@ -1,17 +1,21 @@
 package com.viettelsoftware.firstspringboot.controller;
 
+import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
 import com.viettelsoftware.firstspringboot.dto.CreateTaskRequest;
 import com.viettelsoftware.firstspringboot.dto.UpdateTaskRequest;
+import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.exception.TaskNotFoundException;
-import com.viettelsoftware.firstspringboot.service.TaskExportService;
+import com.viettelsoftware.firstspringboot.service.ExportService;
 import com.viettelsoftware.firstspringboot.service.TaskService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +27,7 @@ public class TaskController {
     private TaskService taskService;
 
     @Autowired
-    private TaskExportService taskExportService;
+    private ExportService exportService;
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping
@@ -33,9 +37,11 @@ public class TaskController {
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/export")
-    public Map<@NonNull String, @NonNull String> exportTasks() {
-        String url = taskExportService.exportTasks();
-        return Map.of("url", url);
+    public ResponseEntity<Void> exportTasks() {
+        Export export = exportService.create(CreateExportRequest.of(Export.Type.TASK));
+        return ResponseEntity.accepted()
+                .location(URI.create(String.format("/api/v1/exports/%d", export.getId())))
+                .build();
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")

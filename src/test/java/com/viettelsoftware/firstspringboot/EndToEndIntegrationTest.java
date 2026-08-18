@@ -14,10 +14,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 class EndToEndIntegrationTest {
@@ -49,11 +49,22 @@ class EndToEndIntegrationTest {
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/v1/tasks/export")
+        String location = mockMvc.perform(get("/api/v1/tasks/export")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Location", matchesPattern("^/api/v1/exports/\\d+$")))
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
+
+        assert location != null;
+        mockMvc.perform(get(location)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.url").exists());
+                .andExpect(jsonPath("$.type").value("TASK"))
+                .andExpect(jsonPath("$.status").exists());
     }
 
     @Test
@@ -93,10 +104,21 @@ class EndToEndIntegrationTest {
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/v1/users/export")
+        String location = mockMvc.perform(get("/api/v1/users/export")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Location", matchesPattern("^/api/v1/exports/\\d+$")))
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
+
+        assert location != null;
+        mockMvc.perform(get(location)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.url").exists());
+                .andExpect(jsonPath("$.type").value("USER"))
+                .andExpect(jsonPath("$.status").exists());
     }
 }
