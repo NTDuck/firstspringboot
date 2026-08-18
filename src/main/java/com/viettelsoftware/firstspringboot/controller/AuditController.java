@@ -21,7 +21,7 @@ public class AuditController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('REALM_ROLE_AUDIT_READ') and hasAuthority('REALM_ROLE_GET')")
-    public @NonNull Page<@NonNull AuditEvent> search(
+    public @NonNull Page<@NonNull AuditEvent> getAuditEvents(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day,
             @RequestParam(required = false) String serviceName,
             @RequestParam(required = false) Long actorUserId,
@@ -30,6 +30,24 @@ public class AuditController {
             @RequestParam(required = false) Boolean result,
             Pageable pageable) {
 
-        return auditService.search(day, serviceName, actorUserId, actorUsername, action, result, pageable);
+        if (day != null) {
+            return auditService.getAuditEventsByDay(day, pageable);
+        }
+        if (serviceName != null) {
+            return auditService.getAuditEventsByServiceName(serviceName, pageable);
+        }
+        if (actorUserId != null) {
+            return auditService.getAuditEventsByActorUserId(actorUserId, pageable);
+        }
+        if (actorUsername != null) {
+            return auditService.getAuditEventsByActorUsername(actorUsername, pageable);
+        }
+        if (action != null) {
+            return auditService.getAuditEventsByAction(action, pageable);
+        }
+        if (result != null) {
+            return auditService.getAuditEventsByResult(result, pageable);
+        }
+        return auditService.getAuditEventsByDay(LocalDate.now(), pageable);
     }
 }

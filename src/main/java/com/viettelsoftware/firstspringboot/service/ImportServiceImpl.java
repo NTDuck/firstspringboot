@@ -6,6 +6,7 @@ import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.exception.ImportNotFoundException;
+import com.viettelsoftware.firstspringboot.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.repository.ImportRepository;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
@@ -48,12 +49,13 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public @NonNull Import create(@NonNull CreateImportRequest request) {
         CurrentUser user = authService.getCurrentUser();
-        String username = user != null && user.getName() != null ? user.getName() : "";
-        Long userId = user != null ? user.getId() : 0L;
+        if (user == null) {
+            throw new InsufficientAuthorizationException("anonymous", "create import");
+        }
 
         Import.RequestedBy requestedBy = Import.RequestedBy.builder()
-                .username(username)
-                .userId(userId)
+                .username(user.getName())
+                .userId(user.getId())
                 .build();
 
         Import importEntity = Import.builder()

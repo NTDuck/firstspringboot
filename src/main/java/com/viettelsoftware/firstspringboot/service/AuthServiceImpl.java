@@ -1,6 +1,9 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.entity.User;
+import com.viettelsoftware.firstspringboot.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,6 +19,9 @@ import java.util.stream.Collectors;
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    @Autowired(required = false)
+    private UserRepository userRepository;
+
     @Override
     public @Nullable CurrentUser getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -24,14 +30,29 @@ public class AuthServiceImpl implements AuthService {
         }
         Jwt token = ((JwtAuthenticationToken) authentication).getToken();
 
-        long userId = 0L;
-        try {
-            userId = Long.parseLong(token.getSubject());
-        } catch (NumberFormatException ignored) {
+        String subject = token.getSubject();
+        String preferredUsername = token.getClaimAsString(StandardClaimNames.PREFERRED_USERNAME);
+        String username = preferredUsername != null && !preferredUsername.isBlank()
+                ? preferredUsername
+                : subject;
+
+        if (username == null || username.isBlank()) {
+            return null;
         }
 
-        String preferredUsername = token.getClaimAsString(StandardClaimNames.PREFERRED_USERNAME);
-        String username = preferredUsername != null ? preferredUsername : (token.getSubject() != null ? token.getSubject() : "");
+        long userId = -1L;
+        if (subject != null) {
+            try {
+                userId = Long.parseLong(subject);
+            } catch (NumberFormatException ignored) {
+                if (userRepository != null) {
+                    userId = userRepository.findByKeycloakId(subject)
+                            .map(User::getId)
+                            .orElse(-1L);
+                }
+            }
+        }
+
         List<String> roles = authentication.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)

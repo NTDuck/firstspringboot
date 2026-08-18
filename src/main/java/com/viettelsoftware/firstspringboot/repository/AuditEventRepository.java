@@ -15,24 +15,6 @@ import java.time.Instant;
 @Repository
 public interface AuditEventRepository extends JpaRepository<@NonNull AuditEvent, @NonNull Long> {
 
-    @Query("SELECT a FROM AuditEvent a WHERE " +
-           "(:startOfDay IS NULL OR a.timestamp >= :startOfDay) AND " +
-           "(:endOfDay IS NULL OR a.timestamp < :endOfDay) AND " +
-           "(:serviceName IS NULL OR a.serviceName = :serviceName) AND " +
-           "(:actorUserId IS NULL OR a.actorUserId = :actorUserId) AND " +
-           "(:actorUsername IS NULL OR a.actorUsername = :actorUsername) AND " +
-           "(:action IS NULL OR a.action = :action) AND " +
-           "(:result IS NULL OR a.result = :result)")
-    @NonNull Page<@NonNull AuditEvent> searchAuditEvents(
-            @Param("startOfDay") @Nullable Instant startOfDay,
-            @Param("endOfDay") @Nullable Instant endOfDay,
-            @Param("serviceName") @Nullable String serviceName,
-            @Param("actorUserId") @Nullable Long actorUserId,
-            @Param("actorUsername") @Nullable String actorUsername,
-            @Param("action") @Nullable String action,
-            @Param("result") @Nullable Boolean result,
-            @NonNull Pageable pageable);
-
     @Query("SELECT a FROM AuditEvent a WHERE a.timestamp >= :startOfDay AND a.timestamp < :endOfDay")
     @NonNull Page<@NonNull AuditEvent> findByTimestampBetween(
             @Param("startOfDay") @NonNull Instant startOfDay,

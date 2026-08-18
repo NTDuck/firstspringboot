@@ -47,7 +47,7 @@ class AuditServiceImplTest {
     }
 
     @Test
-    void testSearchAuditLogs() {
+    void testGetAuditEventsByDay() {
         AuditEvent event = AuditEvent.builder()
                 .id(1L)
                 .timestamp(Instant.now())
@@ -59,15 +59,13 @@ class AuditServiceImplTest {
                 .build();
 
         PageImpl<AuditEvent> page = new PageImpl<>(List.of(event));
-        when(auditEventRepository.searchAuditEvents(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(auditEventRepository.findByTimestampBetween(any(), any(), any())).thenReturn(page);
 
-        Page<AuditEvent> result = auditService.search(
-                LocalDate.now(), "TaskService", 1L, "admin", "CREATE_TASK", true, PageRequest.of(0, 10));
+        Page<AuditEvent> result = auditService.getAuditEventsByDay(LocalDate.now(), PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
     }
-
     @Test
     void testGetAuditEventsByServiceName() {
         AuditEvent event = AuditEvent.builder()

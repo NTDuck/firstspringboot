@@ -7,6 +7,7 @@ import com.viettelsoftware.firstspringboot.dto.GetUserResponse;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.User;
+import com.viettelsoftware.firstspringboot.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.service.AuthService;
 import com.viettelsoftware.firstspringboot.service.ExportService;
 import com.viettelsoftware.firstspringboot.service.ImportService;
@@ -39,8 +40,9 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public @NonNull GetUserResponse profile() {
         var currentUser = authService.getCurrentUser();
-        assert currentUser != null;
-
+        if (currentUser == null) {
+            throw new InsufficientAuthorizationException("anonymous", "get user profile");
+        }
         return GetUserResponse.builder()
                 .name(currentUser.getName())
                 .roles(currentUser.getRoles())

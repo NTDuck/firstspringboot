@@ -25,23 +25,6 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Override
-    public @NonNull Page<@NonNull AuditEvent> search(
-            @Nullable LocalDate day,
-            @Nullable String serviceName,
-            @Nullable Long actorUserId,
-            @Nullable String actorUsername,
-            @Nullable String action,
-            @Nullable Boolean result,
-            @NonNull Pageable pageable) {
-
-        Instant startOfDay = day != null ? day.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
-        Instant endOfDay = day != null ? day.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant() : null;
-
-        return auditEventRepository.searchAuditEvents(
-                startOfDay, endOfDay, serviceName, actorUserId, actorUsername, action, result, pageable);
-    }
-
-    @Override
     public @NonNull Page<@NonNull AuditEvent> getAuditEventsByDay(@NonNull LocalDate day, @NonNull Pageable pageable) {
         Instant startOfDay = day.atStartOfDay(ZoneOffset.UTC).toInstant();
         Instant endOfDay = day.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
