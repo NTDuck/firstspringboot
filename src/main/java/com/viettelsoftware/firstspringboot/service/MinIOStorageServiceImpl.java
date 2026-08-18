@@ -3,14 +3,14 @@ package com.viettelsoftware.firstspringboot.service;
 import io.minio.*;
 import io.minio.http.Method;
 import lombok.NonNull;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 
 @Service
-public class MinIOStorageServiceImpl implements MinIOStorageService {
+public class MinIOStorageServiceImpl implements MinIOStorageService, InitializingBean {
 
     @Value("${minio.url}")
     private String minioUrl;
@@ -26,8 +26,8 @@ public class MinIOStorageServiceImpl implements MinIOStorageService {
 
     private MinioClient minioClient;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public void afterPropertiesSet() {
         minioClient = MinioClient.builder()
                 .endpoint(minioUrl)
                 .credentials(accessKey, secretKey)

@@ -5,17 +5,14 @@ import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
 import lombok.NonNull;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-
+import jakarta.ws.rs.core.Response;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -48,8 +45,6 @@ public class UserServiceImpl implements UserService {
     @Value("${keycloak.admin.client-id}")
     private String adminClientId;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
     @Override
     public List<@NonNull User> getUsers() {
         audit("GET_USERS");
@@ -65,35 +60,33 @@ public class UserServiceImpl implements UserService {
     @Override
     public @NonNull User createUser(@NonNull User user) {
         User userToSave = user;
-        String token = getAdminAccessToken();
-        if (token != null && !token.isBlank()) {
-            try {
-                String usersUrl = keycloakServerUrl + "/admin/realms/" + targetRealm + "/users";
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                headers.setBearerAuth(token);
+        try {
+            Keycloak keycloak = KeycloakBuilder.builder()
+                    .serverUrl(keycloakServerUrl)
+                    .realm(adminRealm)
+                    .username(adminUsername)
+                    .password(adminPassword)
+                    .clientId(adminClientId)
+                    .build();
 
-                Map<String, Object> body = Map.of(
-                        "username", user.getName(),
-                        "email", user.getEmail(),
-                        "firstName", user.getFirstName(),
-                        "lastName", user.getLastName(),
-                        "enabled", true
-                );
+            UserRepresentation userRep = new UserRepresentation();
+            userRep.setUsername(user.getName());
+            userRep.setEmail(user.getEmail());
+            userRep.setFirstName(user.getFirstName());
+            userRep.setLastName(user.getLastName());
+            userRep.setEnabled(true);
 
-                HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-                ResponseEntity<String> response = restTemplate.postForEntity(usersUrl, request, String.class);
-
-                if (response.getStatusCode() == HttpStatus.CREATED && response.getHeaders().getLocation() != null) {
-                    String path = response.getHeaders().getLocation().getPath();
+            try (Response response = keycloak.realm(targetRealm).users().create(userRep)) {
+                if (response.getStatus() == 201 && response.getLocation() != null) {
+                    String path = response.getLocation().getPath();
                     String keycloakId = path.substring(path.lastIndexOf('/') + 1);
                     if (!keycloakId.isBlank()) {
                         userToSave = user.withKeycloakId(keycloakId);
                     }
                 }
-            } catch (Exception ignored) {
-                // User may already exist in Keycloak or Keycloak unavailable, proceed to local DB save
             }
+        } catch (Exception ignored) {
+            // User may already exist in Keycloak or Keycloak unavailable, proceed to local DB save
         }
 
         final User finalUserToSave = userToSave;
@@ -109,32 +102,6 @@ public class UserServiceImpl implements UserService {
 
         audit("CREATE_USER");
         return saved;
-    }
-
-    private String getAdminAccessToken() {
-        try {
-            String tokenUrl = keycloakServerUrl + "/realms/" + adminRealm + "/protocol/openid-connect/token";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-            map.add("grant_type", "password");
-            map.add("client_id", adminClientId);
-            map.add("username", adminUsername);
-            map.add("password", adminPassword);
-
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    tokenUrl, HttpMethod.POST, request, new ParameterizedTypeReference<Map<String, Object>>() {});
-
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                Object tokenObj = response.getBody().get("access_token");
-                return tokenObj != null ? tokenObj.toString() : null;
-            }
-        } catch (Exception ignored) {
-        }
-        return null;
     }
 
     private void audit(@NonNull String action) {
