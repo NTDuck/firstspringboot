@@ -1,6 +1,7 @@
 package com.viettelsoftware.firstspringboot.config;
 
 import com.viettelsoftware.firstspringboot.exception.FirstspringbootApplicationException;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -14,7 +15,6 @@ import java.io.IOException;
 
 // https://jenkov.com/tutorials/java-servlets/servlet-filters.html
 // https://stackoverflow.com/questions/34595605/how-to-manage-exceptions-thrown-in-filters-in-spring
-// Routes to `GlobalExceptionHandler`
 @Component
 public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
     private final HandlerExceptionResolver resolver;
@@ -25,13 +25,14 @@ public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         try {
             filterChain.doFilter(request, response);
         } catch (FirstspringbootApplicationException exception) {
+            // Routes to `GlobalExceptionHandler`
             resolver.resolveException(request, response, null, exception);
         }
     }

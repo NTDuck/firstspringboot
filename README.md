@@ -1,6 +1,6 @@
 # firstspringboot
 
-## Infrastructure Setup
+## Setup
 
 ```bash
 docker-compose up -d

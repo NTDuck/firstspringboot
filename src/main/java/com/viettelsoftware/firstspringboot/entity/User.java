@@ -13,7 +13,7 @@ import javax.persistence.*;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private @NonNull long id;
+    private long id;
 
     @With
     @Column(name = "keycloak_id", nullable = false, unique = true)

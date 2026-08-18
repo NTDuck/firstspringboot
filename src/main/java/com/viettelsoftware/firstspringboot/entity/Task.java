@@ -14,7 +14,7 @@ import javax.persistence.*;
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private @NonNull long id;
+    private long id;
 
     @With
     @Column(name = "task", nullable = false)

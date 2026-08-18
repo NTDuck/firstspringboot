@@ -19,7 +19,7 @@ import java.time.Instant;
 public class AuditEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private @NonNull long id;
+    private long id;
 
     @Builder.Default
     @Column(name = "timestamp", nullable = false)
@@ -29,7 +29,7 @@ public class AuditEvent {
     private @NonNull String serviceName;
 
     @Column(name = "actor_user_id", nullable = false)
-    private @NonNull long actorUserId;
+    private long actorUserId;
 
     @Column(name = "actor_username", nullable = false)
     private @NonNull String actorUsername;
@@ -38,7 +38,7 @@ public class AuditEvent {
     private @NonNull String action;
 
     @Column(name = "result", nullable = false)
-    private @NonNull boolean result;
+    private boolean result;
 
     @Column(name = "exception", columnDefinition = "TEXT")
     private @Nullable String exception;

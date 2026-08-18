@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         @Builder.Default
         private final @NonNull UUID traceId = UUID.randomUUID(); // service, tts,
 
-        private final @NonNull int status;
+        private final int status;
         private final @NonNull String error;
         private final @NonNull String message;
     }
