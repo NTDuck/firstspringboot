@@ -7,14 +7,14 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class ExportAlreadyFailedException extends FirstspringbootApplicationException {
-    private final @NonNull long exportId;
+    private final long exportId;
 
-    public static @NonNull ExportAlreadyFailedException of(@NonNull long exportId) {
+    public static @NonNull ExportAlreadyFailedException of(long exportId) {
         return new ExportAlreadyFailedException(exportId);
     }
 
     @Builder
-    public ExportAlreadyFailedException(@NonNull long exportId) {
+    public ExportAlreadyFailedException(long exportId) {
         super(
                 HttpStatus.BAD_REQUEST,
                 String.format("Export `%d` has already failed", exportId));

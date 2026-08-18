@@ -46,7 +46,7 @@ public class TaskController {
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/{id}")
-    public @NonNull Task getTaskById(@PathVariable @NonNull long id) {
+    public @NonNull Task getTaskById(@PathVariable long id) {
         return taskService.getTaskById(id)
                 .orElseThrow(() -> TaskNotFoundException.of(id));
     }
@@ -63,14 +63,14 @@ public class TaskController {
 
     @PreAuthorize("hasAuthority('REALM_ROLE_PUT')")
     @PutMapping("/{id}")
-    public @NonNull Task updateTaskById(@PathVariable @NonNull long id, @Valid @RequestBody @NonNull UpdateTaskRequest request) {
+    public @NonNull Task updateTaskById(@PathVariable long id, @Valid @RequestBody @NonNull UpdateTaskRequest request) {
         return taskService.updateTask(id, request.getDescription())
                 .orElseThrow(() -> TaskNotFoundException.of(id));
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
     @DeleteMapping("/{id}")
-    public Map<@NonNull String, @NonNull Boolean> deleteTaskById(@PathVariable @NonNull long id) throws TaskNotFoundException {
+    public Map<@NonNull String, @NonNull Boolean> deleteTaskById(@PathVariable long id) throws TaskNotFoundException {
         boolean exists = taskService.exists(id);
         taskService.deleteTaskById(id);
 

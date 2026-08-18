@@ -12,7 +12,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class ExportResponse {
 
-    private final @NonNull long id;
+    private final long id;
     private final @NonNull Export.Type type;
     private final @NonNull Export.Status status;
     private final @NonNull Export.RequestedBy requestedBy;

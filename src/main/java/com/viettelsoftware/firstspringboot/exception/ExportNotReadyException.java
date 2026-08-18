@@ -7,14 +7,14 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class ExportNotReadyException extends FirstspringbootApplicationException {
-    private final @NonNull long exportId;
+    private final long exportId;
 
-    public static @NonNull ExportNotReadyException of(@NonNull long exportId) {
+    public static @NonNull ExportNotReadyException of(long exportId) {
         return new ExportNotReadyException(exportId);
     }
 
     @Builder
-    public ExportNotReadyException(@NonNull long exportId) {
+    public ExportNotReadyException(long exportId) {
         super(
                 HttpStatus.BAD_REQUEST,
                 String.format("Export `%d` is not ready for download", exportId));

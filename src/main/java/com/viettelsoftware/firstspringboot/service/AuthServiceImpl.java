@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.dto.CurrentUser;
-import lombok.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,10 +17,11 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthService {
 
     @Override
-    public @NonNull CurrentUser getCurrentUser() {
+    public @Nullable CurrentUser getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assert authentication instanceof JwtAuthenticationToken;
-
+        if (!(authentication instanceof JwtAuthenticationToken)) {
+            return null;
+        }
         Jwt token = ((JwtAuthenticationToken) authentication).getToken();
 
         long userId = 0L;

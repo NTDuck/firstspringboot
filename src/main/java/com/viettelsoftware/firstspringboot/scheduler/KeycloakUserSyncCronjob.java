@@ -93,8 +93,8 @@ public class KeycloakUserSyncCronjob {
                         .orElseGet(() -> userRepository.save(user));
             }
             logger.info("Keycloak user synchronization completed successfully. Synced {} users.", keycloakUsers.size());
-        } catch (Exception e) {
-            logger.error("Error occurred while syncing Keycloak users: {}", e.getMessage(), e);
+        } catch (Exception exception) {
+            logger.error("Error occurred while syncing Keycloak users: {}", exception.getMessage(), exception);
         }
     }
 }

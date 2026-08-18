@@ -8,7 +8,7 @@ public interface ExportService {
 
     @NonNull Export create(@NonNull CreateExportRequest request);
 
-    @NonNull Export getById(@NonNull long id);
+    @NonNull Export getById(long id);
 
-    void process(@NonNull long id);
+    void process(long id);
 }

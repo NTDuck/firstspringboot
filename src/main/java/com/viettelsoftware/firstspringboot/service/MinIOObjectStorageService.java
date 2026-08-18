@@ -55,8 +55,8 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
                             .contentType(contentType)
                             .build()
             );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file to MinIO", e);
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to upload file to MinIO", exception);
         }
     }
 
@@ -69,8 +69,8 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
                             .object(objectKey)
                             .build()
             );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete file from MinIO", e);
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to delete file from MinIO", exception);
         }
     }
 
@@ -86,8 +86,8 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
                             .expiry(expirySeconds)
                             .build()
             );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate presigned download URL from MinIO", e);
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to generate presigned download URL from MinIO", exception);
         }
     }
 }

@@ -7,14 +7,14 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class TaskNotFoundException extends FirstspringbootApplicationException {
-    private final @NonNull long taskId;
+    private final long taskId;
 
-    public static @NonNull TaskNotFoundException of(@NonNull long taskId) {
+    public static @NonNull TaskNotFoundException of(long taskId) {
         return new TaskNotFoundException(taskId);
     }
 
     @Builder
-    public TaskNotFoundException(@NonNull long taskId) {
+    public TaskNotFoundException(long taskId) {
         super(
                 HttpStatus.NOT_FOUND,
                 String.format("Task `%d` not found", taskId));

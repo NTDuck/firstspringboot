@@ -28,7 +28,7 @@ class ExportServiceImplTest {
     private AuthService authService;
 
     @Mock
-    private ExportAsyncProcessor exportAsyncProcessor;
+    private ExportServiceImpl.Processor processor;
 
     @InjectMocks
     private ExportServiceImpl exportService;
@@ -51,7 +51,7 @@ class ExportServiceImplTest {
         assertNotNull(result);
         assertEquals(10L, result.getId());
         verify(exportRepository).save(any(Export.class));
-        verify(exportAsyncProcessor).process(10L);
+        verify(processor).process(10L);
     }
 
     @Test
@@ -79,6 +79,6 @@ class ExportServiceImplTest {
     @Test
     void testProcessDelegatesToAsyncProcessor() {
         exportService.process(15L);
-        verify(exportAsyncProcessor).process(15L);
+        verify(processor).process(15L);
     }
 }

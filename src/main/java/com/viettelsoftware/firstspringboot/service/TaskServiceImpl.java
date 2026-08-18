@@ -24,19 +24,19 @@ public class TaskServiceImpl implements TaskService {
     private AuthService authService;
 
     @Override
-    public @NonNull boolean exists(@NonNull long taskId) {
+    public boolean exists(long taskId) {
         audit("EXISTS");
         return taskRepository.existsById(taskId);
     }
 
     @Override
-    public @NonNull long count() {
+    public long count() {
         audit("COUNT");
         return taskRepository.count();
     }
 
     @Override
-    public Optional<@NonNull Task> getTaskById(@NonNull long taskId) {
+    public Optional<@NonNull Task> getTaskById(long taskId) {
         audit("GET_TASK_BY_ID");
         return taskRepository.findById(taskId);
     }
@@ -55,7 +55,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public @NonNull Optional<@NonNull Task> updateTask(@NonNull long taskId, @NonNull String description) {
+    public @NonNull Optional<@NonNull Task> updateTask(long taskId, @NonNull String description) {
         Optional<Task> updatedTask = taskRepository.findById(taskId)
                 .map(task -> taskRepository.save(task.withDescription(description)));
 
@@ -64,7 +64,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTaskById(@NonNull long taskId) {
+    public void deleteTaskById(long taskId) {
         taskRepository.deleteById(taskId);
         audit("DELETE_TASK_BY_ID");
     }

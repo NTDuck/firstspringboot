@@ -7,19 +7,19 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskService {
-    @NonNull boolean exists(@NonNull long taskId);
+    boolean exists(long taskId);
 
-    @NonNull long count();
+    long count();
 
-    Optional<@NonNull Task> getTaskById(@NonNull long taskId);
+    Optional<@NonNull Task> getTaskById(long taskId);
 
     List<@NonNull Task> getTasks();
 
     @NonNull Task createTask(@NonNull Task task);
 
-    @NonNull Optional<@NonNull Task> updateTask(@NonNull long taskId, @NonNull String description);
+    @NonNull Optional<@NonNull Task> updateTask(long taskId, @NonNull String description);
 
-    void deleteTaskById(@NonNull long taskId);
+    void deleteTaskById(long taskId);
 
     void deleteTasks();
 }

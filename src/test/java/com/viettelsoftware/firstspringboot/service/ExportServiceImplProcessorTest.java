@@ -19,7 +19,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ExportAsyncProcessorTest {
+class ExportServiceImplProcessorTest {
 
     @Mock
     private ExportRepository exportRepository;
@@ -34,7 +34,7 @@ class ExportAsyncProcessorTest {
     private ObjectStorageService objectStorageService;
 
     @InjectMocks
-    private ExportAsyncProcessor exportAsyncProcessor;
+    private ExportServiceImpl.Processor processor;
 
     @Test
     void testProcessTaskExportSuccess() {
@@ -49,7 +49,7 @@ class ExportAsyncProcessorTest {
         when(objectStorageService.createPresignedDownloadUrl(eq("tasks-1.xlsx"), any(Duration.class)))
                 .thenReturn("http://localhost:9000/bucket/tasks-1.xlsx");
 
-        exportAsyncProcessor.process(1L);
+        processor.process(1L);
 
         verify(objectStorageService).put(eq("tasks-1.xlsx"), eq(new byte[]{1, 2, 3}), anyString());
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
@@ -75,7 +75,7 @@ class ExportAsyncProcessorTest {
         when(objectStorageService.createPresignedDownloadUrl(eq("users-2.xlsx"), any(Duration.class)))
                 .thenReturn("http://localhost:9000/bucket/users-2.xlsx");
 
-        exportAsyncProcessor.process(2L);
+        processor.process(2L);
 
         verify(objectStorageService).put(eq("users-2.xlsx"), eq(new byte[]{4, 5, 6}), anyString());
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
@@ -97,7 +97,7 @@ class ExportAsyncProcessorTest {
         when(exportRepository.findById(3L)).thenReturn(Optional.of(export));
         when(taskExportGenerator.generate()).thenThrow(new RuntimeException("Generation failed"));
 
-        exportAsyncProcessor.process(3L);
+        processor.process(3L);
 
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
         verify(exportRepository, atLeast(2)).save(captor.capture());
@@ -112,7 +112,7 @@ class ExportAsyncProcessorTest {
     void testProcessExportNotFound() {
         when(exportRepository.findById(999L)).thenReturn(Optional.empty());
 
-        exportAsyncProcessor.process(999L);
+        processor.process(999L);
 
         verify(exportRepository, never()).save(any());
         verifyNoInteractions(taskExportGenerator, userExportGenerator, objectStorageService);

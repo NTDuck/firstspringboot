@@ -23,14 +23,14 @@ public class ExportController {
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/{id}")
-    public @NonNull ExportResponse getExportStatus(@PathVariable("id") @NonNull long id) {
+    public @NonNull ExportResponse getExportStatus(@PathVariable("id") long id) {
         Export export = exportService.getById(id);
         return ExportResponse.from(export);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/{id}/download")
-    public @NonNull DownloadExportResponse downloadExport(@PathVariable("id") @NonNull long id) {
+    public @NonNull DownloadExportResponse downloadExport(@PathVariable("id") long id) {
         Export export = exportService.getById(id);
         if (export.getStatus() == Export.Status.FAILED) {
             throw ExportAlreadyFailedException.of(id);

@@ -47,4 +47,10 @@ class AuthServiceImplTest {
         assertEquals("testuser", currentUser.getName());
         assertEquals(List.of("REALM_ROLE_GET"), currentUser.getRoles());
     }
+
+    @Test
+    void testGetCurrentUserUnauthenticated() {
+        CurrentUser currentUser = authService.getCurrentUser();
+        assertNull(currentUser);
+    }
 }
