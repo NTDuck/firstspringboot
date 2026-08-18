@@ -2,6 +2,8 @@ package com.viettelsoftware.firstspringboot.service;
 
 import lombok.NonNull;
 
+import java.io.File;
+
 public interface UserExportGenerator {
-    byte @NonNull [] generate();
+    @NonNull File generate();
 }

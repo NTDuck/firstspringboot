@@ -68,6 +68,14 @@ class EndToEndIntegrationTest {
     }
 
     @Test
+    void testTaskImportEndpoint() throws Exception {
+        mockMvc.perform(post("/api/v1/tasks/import")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"))))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Location", matchesPattern("^/api/v1/imports/\\d+$")));
+    }
+    @Test
     void testCreateTaskValidation() throws Exception {
         CreateTaskRequest invalidReq = CreateTaskRequest.builder()
                 .description(" Invalid Description ")
@@ -120,5 +128,14 @@ class EndToEndIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.type").value("USER"))
                 .andExpect(jsonPath("$.status").exists());
+    }
+
+    @Test
+    void testUserImportEndpoint() throws Exception {
+        mockMvc.perform(post("/api/v1/users/import")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST", "REALM_ROLE_USER_CREATE"))))
+                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"), new SimpleGrantedAuthority("REALM_ROLE_USER_CREATE"))))
+                .andExpect(status().isAccepted())
+                .andExpect(header().string("Location", matchesPattern("^/api/v1/imports/\\d+$")));
     }
 }

@@ -9,13 +9,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,21 +39,27 @@ class ExportServiceImplProcessorTest {
     private ExportServiceImpl.Processor processor;
 
     @Test
-    void testProcessTaskExportSuccess() {
+    void testProcessTaskExportSuccess() throws Exception {
         Export export = Export.builder()
                 .id(1L)
                 .type(Export.Type.TASK)
                 .status(Export.Status.PENDING)
                 .requestedBy(Export.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+
+        File tempFile = File.createTempFile("test-task-", ".xlsx");
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(new byte[]{1, 2, 3});
+        }
+
         when(exportRepository.findById(1L)).thenReturn(Optional.of(export));
-        when(taskExportGenerator.generate()).thenReturn(new byte[]{1, 2, 3});
+        when(taskExportGenerator.generate()).thenReturn(tempFile);
         when(objectStorageService.createPresignedDownloadUrl(eq("tasks-1.xlsx"), any(Duration.class)))
                 .thenReturn("http://localhost:9000/bucket/tasks-1.xlsx");
 
         processor.process(1L);
 
-        verify(objectStorageService).put(eq("tasks-1.xlsx"), eq(new byte[]{1, 2, 3}), anyString());
+        verify(objectStorageService).put(eq("tasks-1.xlsx"), any(InputStream.class), eq(3L), anyString());
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
         verify(exportRepository, atLeast(2)).save(captor.capture());
 
@@ -63,21 +71,27 @@ class ExportServiceImplProcessorTest {
     }
 
     @Test
-    void testProcessUserExportSuccess() {
+    void testProcessUserExportSuccess() throws Exception {
         Export export = Export.builder()
                 .id(2L)
                 .type(Export.Type.USER)
                 .status(Export.Status.PENDING)
                 .requestedBy(Export.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+
+        File tempFile = File.createTempFile("test-user-", ".xlsx");
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(new byte[]{4, 5, 6, 7});
+        }
+
         when(exportRepository.findById(2L)).thenReturn(Optional.of(export));
-        when(userExportGenerator.generate()).thenReturn(new byte[]{4, 5, 6});
+        when(userExportGenerator.generate()).thenReturn(tempFile);
         when(objectStorageService.createPresignedDownloadUrl(eq("users-2.xlsx"), any(Duration.class)))
                 .thenReturn("http://localhost:9000/bucket/users-2.xlsx");
 
         processor.process(2L);
 
-        verify(objectStorageService).put(eq("users-2.xlsx"), eq(new byte[]{4, 5, 6}), anyString());
+        verify(objectStorageService).put(eq("users-2.xlsx"), any(InputStream.class), eq(4L), anyString());
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
         verify(exportRepository, atLeast(2)).save(captor.capture());
 

@@ -1,12 +1,15 @@
 package com.viettelsoftware.firstspringboot.controller;
 
 import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.dto.CreateImportRequest;
 import com.viettelsoftware.firstspringboot.dto.CreateTaskRequest;
 import com.viettelsoftware.firstspringboot.dto.UpdateTaskRequest;
 import com.viettelsoftware.firstspringboot.entity.Export;
+import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.exception.TaskNotFoundException;
 import com.viettelsoftware.firstspringboot.service.ExportService;
+import com.viettelsoftware.firstspringboot.service.ImportService;
 import com.viettelsoftware.firstspringboot.service.TaskService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,9 @@ public class TaskController {
     @Autowired
     private ExportService exportService;
 
+    @Autowired
+    private ImportService importService;
+
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping
     public List<@NonNull Task> getTasks() {
@@ -41,6 +47,15 @@ public class TaskController {
         Export export = exportService.create(CreateExportRequest.of(Export.Type.TASK));
         return ResponseEntity.accepted()
                 .location(URI.create(String.format("/api/v1/exports/%d", export.getId())))
+                .build();
+    }
+
+    @PreAuthorize("hasAuthority('REALM_ROLE_POST')")
+    @PostMapping("/import")
+    public ResponseEntity<Void> importTasks() {
+        Import importEntity = importService.create(CreateImportRequest.of(Import.Type.TASK));
+        return ResponseEntity.accepted()
+                .location(URI.create(String.format("/api/v1/imports/%d", importEntity.getId())))
                 .build();
     }
 

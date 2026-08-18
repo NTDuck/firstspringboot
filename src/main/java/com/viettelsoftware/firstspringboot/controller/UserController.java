@@ -1,22 +1,21 @@
 package com.viettelsoftware.firstspringboot.controller;
 
 import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.dto.CreateImportRequest;
 import com.viettelsoftware.firstspringboot.dto.CreateUserRequest;
 import com.viettelsoftware.firstspringboot.dto.GetUserResponse;
 import com.viettelsoftware.firstspringboot.entity.Export;
+import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.service.AuthService;
 import com.viettelsoftware.firstspringboot.service.ExportService;
+import com.viettelsoftware.firstspringboot.service.ImportService;
 import com.viettelsoftware.firstspringboot.service.UserService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -29,6 +28,9 @@ public class UserController {
 
     @Autowired
     private ExportService exportService;
+
+    @Autowired
+    private ImportService importService;
 
     @Autowired
     private AuthService authService;
@@ -57,6 +59,15 @@ public class UserController {
         Export export = exportService.create(CreateExportRequest.of(Export.Type.USER));
         return ResponseEntity.accepted()
                 .location(URI.create(String.format("/api/v1/exports/%d", export.getId())))
+                .build();
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('REALM_ROLE_USER_CREATE') and hasAuthority('REALM_ROLE_POST')")
+    public ResponseEntity<Void> importUsers() {
+        Import importEntity = importService.create(CreateImportRequest.of(Import.Type.USER));
+        return ResponseEntity.accepted()
+                .location(URI.create(String.format("/api/v1/imports/%d", importEntity.getId())))
                 .build();
     }
 

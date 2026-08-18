@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -91,23 +93,26 @@ public class ExportServiceImpl implements ExportService {
             exportRepository.save(export);
 
             long startTime = System.currentTimeMillis();
+            File tempFile = null;
             try {
-                byte[] fileContent;
                 String objectKey;
 
                 if (export.getType() == Export.Type.TASK) {
-                    fileContent = taskExportGenerator.generate();
+                    tempFile = taskExportGenerator.generate();
                     objectKey = String.format("tasks-%d.xlsx", exportId);
                 } else {
-                    fileContent = userExportGenerator.generate();
+                    tempFile = userExportGenerator.generate();
                     objectKey = String.format("users-%d.xlsx", exportId);
                 }
 
-                objectStorageService.put(
-                        objectKey,
-                        fileContent,
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                );
+                try (InputStream inputStream = new BufferedInputStream(new FileInputStream(tempFile))) {
+                    objectStorageService.put(
+                            objectKey,
+                            inputStream,
+                            tempFile.length(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    );
+                }
 
                 String presignedUrl = objectStorageService.createPresignedDownloadUrl(objectKey, Duration.ofDays(7));
                 long elapsed = System.currentTimeMillis() - startTime;
@@ -125,6 +130,14 @@ public class ExportServiceImpl implements ExportService {
                 export.setCompletedAt(Instant.now());
                 export.setTimeElapsed(elapsed);
                 exportRepository.save(export);
+            } finally {
+                if (tempFile != null && tempFile.exists()) {
+                    try {
+                        Files.deleteIfExists(tempFile.toPath());
+                    } catch (Exception ignored) {
+                        tempFile.delete();
+                    }
+                }
             }
         }
     }

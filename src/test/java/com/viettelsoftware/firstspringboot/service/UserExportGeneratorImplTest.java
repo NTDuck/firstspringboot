@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,9 +36,11 @@ class UserExportGeneratorImplTest {
 
         when(userService.getUsers()).thenReturn(List.of(u1));
 
-        byte[] result = userExportGenerator.generate();
+        File result = userExportGenerator.generate();
 
         assertNotNull(result);
-        assertTrue(result.length > 0);
+        assertTrue(result.exists());
+        assertTrue(result.length() > 0);
+        result.delete();
     }
 }

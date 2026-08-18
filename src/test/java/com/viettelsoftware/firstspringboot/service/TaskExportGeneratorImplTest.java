@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,9 +30,11 @@ class TaskExportGeneratorImplTest {
 
         when(taskService.getTasks()).thenReturn(List.of(t1, t2));
 
-        byte[] result = taskExportGenerator.generate();
+        File result = taskExportGenerator.generate();
 
         assertNotNull(result);
-        assertTrue(result.length > 0);
+        assertTrue(result.exists());
+        assertTrue(result.length() > 0);
+        result.delete();
     }
 }

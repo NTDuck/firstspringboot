@@ -7,10 +7,7 @@ import org.jxls.util.JxlsHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 
 @Service
@@ -20,19 +17,24 @@ public class TaskExportGeneratorImpl implements TaskExportGenerator {
     private TaskService taskService;
 
     @Override
-    public byte @NonNull [] generate() {
+    public @NonNull File generate() {
         List<Task> tasks = taskService.getTasks();
-        try (InputStream inputStream = getClass().getResourceAsStream("/templates/tasks_template.xlsx");
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            if (inputStream == null) {
-                throw new FileNotFoundException("Resource `/templates/tasks_template.xlsx` not found");
+        try {
+            File tempFile = File.createTempFile("tasks-export-", ".xlsx");
+            tempFile.deleteOnExit();
+
+            try (InputStream inputStream = getClass().getResourceAsStream("/templates/tasks_template.xlsx");
+                 OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tempFile))) {
+                if (inputStream == null) {
+                    throw new FileNotFoundException("Resource `/templates/tasks_template.xlsx` not found");
+                }
+
+                Context context = new Context();
+                context.putVar("tasks", tasks);
+
+                JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
             }
-
-            Context context = new Context();
-            context.putVar("tasks", tasks);
-
-            JxlsHelper.getInstance().processTemplate(inputStream, outputStream, context);
-            return outputStream.toByteArray();
+            return tempFile;
 
         } catch (IOException exception) {
             throw new RuntimeException("Failed to generate tasks export Excel", exception);
