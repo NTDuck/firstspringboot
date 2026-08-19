@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.controller.exception;
+package com.viettelsoftware.firstspringboot.config.exception;
 
 import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
 import lombok.Builder;
@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class InsufficientAuthorizationException extends BaseGloballyHandledException {
+
     private final @NonNull String username;
     private final @NonNull String operation;
 

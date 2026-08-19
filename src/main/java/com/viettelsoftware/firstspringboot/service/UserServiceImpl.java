@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void audit(@NonNull String action) {
-        AuthenticatedUser authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
+        AuthenticatedUserDto authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
         if (authenticatedUser == null) {
             return;
         }

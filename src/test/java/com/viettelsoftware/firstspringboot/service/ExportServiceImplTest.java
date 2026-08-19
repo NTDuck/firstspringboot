@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.controller.model.CreateExportRequest;
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
 import com.viettelsoftware.firstspringboot.repository.ExportRepository;
@@ -35,7 +35,7 @@ class ExportServiceImplTest {
 
     @Test
     void testCreateExport() {
-        AuthenticatedUser user = AuthenticatedUser.builder().id(5L).name("john").roles(List.of()).build();
+        AuthenticatedUserDto user = AuthenticatedUserDto.builder().id(5L).name("john").roles(List.of()).build();
         when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(user);
 
         Export saved = Export.builder()

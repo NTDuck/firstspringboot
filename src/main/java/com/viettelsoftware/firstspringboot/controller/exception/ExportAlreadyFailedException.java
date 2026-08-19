@@ -8,14 +8,15 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class ExportAlreadyFailedException extends BaseGloballyHandledException {
-    private final long exportId;
 
-    public static @NonNull ExportAlreadyFailedException of(long exportId) {
+    private final @NonNull Long exportId;
+
+    public static ExportAlreadyFailedException of(Long exportId) {
         return new ExportAlreadyFailedException(exportId);
     }
 
     @Builder
-    public ExportAlreadyFailedException(long exportId) {
+    public ExportAlreadyFailedException(Long exportId) {
         super(
                 HttpStatus.BAD_REQUEST,
                 String.format("Export `%d` has already failed", exportId));

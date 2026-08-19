@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.controller.model.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateImportRequest;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.controller.exception.ImportNotFoundException;
 import com.viettelsoftware.firstspringboot.repository.ImportRepository;
@@ -40,7 +40,7 @@ class ImportServiceImplTest {
 
     @Test
     void testCreateImport() {
-        AuthenticatedUser user = AuthenticatedUser.builder().id(5L).name("john").roles(List.of()).build();
+        AuthenticatedUserDto user = AuthenticatedUserDto.builder().id(5L).name("john").roles(List.of()).build();
         when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(user);
 
         Import saved = Import.builder()

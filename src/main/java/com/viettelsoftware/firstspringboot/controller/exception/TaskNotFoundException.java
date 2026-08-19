@@ -8,14 +8,15 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class TaskNotFoundException extends BaseGloballyHandledException {
-    private final long taskId;
 
-    public static @NonNull TaskNotFoundException of(long taskId) {
+    private final @NonNull Long taskId;
+
+    public static TaskNotFoundException of(Long taskId) {
         return new TaskNotFoundException(taskId);
     }
 
     @Builder
-    public TaskNotFoundException(long taskId) {
+    public TaskNotFoundException(Long taskId) {
         super(
                 HttpStatus.NOT_FOUND,
                 String.format("Task `%d` not found", taskId));

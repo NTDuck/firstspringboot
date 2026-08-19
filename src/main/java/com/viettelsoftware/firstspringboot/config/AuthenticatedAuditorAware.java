@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.config;
 
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +20,6 @@ public class AuthenticatedAuditorAware implements AuditorAware<Long> {
     public Optional<Long> getCurrentAuditor() {
         return authenticationService
                 .getCurrentAuthenticatedUser()
-                .map(AuthenticatedUser::getId);
+                .map(AuthenticatedUserDto::getId);
     }
 }

@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ class TaskServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(AuthenticatedUser.builder().id(1L).name("testuser").roles(List.of()).build());
+        lenient().when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(AuthenticatedUserDto.builder().id(1L).name("testuser").roles(List.of()).build());
     }
 
     @Test

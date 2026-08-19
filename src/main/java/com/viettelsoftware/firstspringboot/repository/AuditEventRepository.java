@@ -7,13 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 
 @Repository
-public interface AuditEventRepository extends JpaRepository<@NonNull AuditEvent, @NonNull Long> {
+public interface AuditEventRepository extends JpaRepository<AuditEvent, Long> {
 
     @Query("SELECT a FROM AuditEvent a WHERE a.timestamp >= :startOfDay AND a.timestamp < :endOfDay")
     @NonNull Page<@NonNull AuditEvent> findByTimestampBetween(

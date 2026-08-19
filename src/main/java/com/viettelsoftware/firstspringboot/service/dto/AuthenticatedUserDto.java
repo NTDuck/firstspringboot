@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.service.model;
+package com.viettelsoftware.firstspringboot.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor
-public class AuthenticatedUser {
-
+public class AuthenticatedUserDto {
     private final Long id;
     private final String name;
     private final List<String> roles;

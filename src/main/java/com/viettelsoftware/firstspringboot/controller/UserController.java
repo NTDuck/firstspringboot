@@ -1,13 +1,13 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.controller.model.CreateExportRequest;
-import com.viettelsoftware.firstspringboot.controller.model.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.controller.model.CreateUserRequest;
-import com.viettelsoftware.firstspringboot.controller.model.GetUserResponse;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateImportRequest;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateUserRequest;
+import com.viettelsoftware.firstspringboot.controller.dto.GetUserResponse;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.User;
-import com.viettelsoftware.firstspringboot.controller.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.config.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.service.AuthenticationService;
 import com.viettelsoftware.firstspringboot.service.ExportService;
 import com.viettelsoftware.firstspringboot.service.ImportService;

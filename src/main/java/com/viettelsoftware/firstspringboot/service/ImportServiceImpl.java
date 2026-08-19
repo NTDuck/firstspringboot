@@ -1,12 +1,12 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.controller.model.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateImportRequest;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.controller.exception.ImportNotFoundException;
-import com.viettelsoftware.firstspringboot.controller.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.config.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.repository.ImportRepository;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
@@ -47,7 +47,7 @@ public class ImportServiceImpl implements ImportService {
 
     @Override
     public @NonNull Import create(@NonNull CreateImportRequest request) {
-        AuthenticatedUser user = authenticationService.getCurrentAuthenticatedUser();
+        AuthenticatedUserDto user = authenticationService.getCurrentAuthenticatedUser();
         if (user == null) {
             throw new InsufficientAuthorizationException("anonymous", "create import");
         }

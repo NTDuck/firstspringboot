@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.controller.model.DownloadExportResponse;
-import com.viettelsoftware.firstspringboot.controller.model.ExportResponse;
+import com.viettelsoftware.firstspringboot.controller.dto.DownloadExportResponse;
+import com.viettelsoftware.firstspringboot.controller.dto.ExportResponse;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.controller.exception.ExportAlreadyFailedException;
 import com.viettelsoftware.firstspringboot.controller.exception.ExportNotReadyException;

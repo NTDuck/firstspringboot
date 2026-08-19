@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class AuthenticationServiceImplTest {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        AuthenticatedUser authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
+        AuthenticatedUserDto authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
 
         assertNotNull(authenticatedUser);
         assertEquals(123L, authenticatedUser.getId());
@@ -50,7 +50,7 @@ class AuthenticationServiceImplTest {
 
     @Test
     void testGetCurrentAuthenticatedUserUnauthenticated() {
-        AuthenticatedUser authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
+        AuthenticatedUserDto authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
         assertNull(authenticatedUser);
     }
 }

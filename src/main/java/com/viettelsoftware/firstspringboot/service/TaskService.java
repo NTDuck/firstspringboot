@@ -1,25 +1,25 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.entity.Task;
-import lombok.NonNull;
+import com.viettelsoftware.firstspringboot.service.exception.TaskNotFoundException;
+import com.viettelsoftware.firstspringboot.service.dto.TaskWithoutIdDto;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface TaskService {
-    boolean exists(long taskId);
 
-    long count();
+    Long count();
 
-    Optional<@NonNull Task> getTaskById(long taskId);
+    Optional<Task> getTaskById(Long taskId);
 
-    List<@NonNull Task> getTasks();
+    List<Task> getTasks();
 
-    @NonNull Task createTask(@NonNull Task task);
+    Task createTask(TaskWithoutIdDto taskWithoutId);
 
-    @NonNull Optional<@NonNull Task> updateTask(long taskId, @NonNull String description);
+    void updateTask(Long taskId, TaskWithoutIdDto taskWithoutId) throws TaskNotFoundException;
 
-    void deleteTaskById(long taskId);
+    void deleteTaskById(Long taskId) throws TaskNotFoundException;
 
     void deleteTasks();
 }

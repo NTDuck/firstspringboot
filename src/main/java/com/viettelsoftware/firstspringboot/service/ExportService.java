@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.controller.model.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateExportRequest;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import lombok.NonNull;
 

@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -24,7 +24,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserRepository userRepository;
 
     @Override
-    public Optional<AuthenticatedUser> getCurrentAuthenticatedUser() {
+    public Optional<AuthenticatedUserDto> getCurrentAuthenticatedUser() {
         val authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(authentication instanceof JwtAuthenticationToken)) {
@@ -45,7 +45,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         val roles = getUserRolesFromAuthentication(authentication);
 
         return Optional.of(
-                AuthenticatedUser.builder()
+                AuthenticatedUserDto.builder()
                         .id(userId.get())
                         .name(username.get())
                         .roles(roles)

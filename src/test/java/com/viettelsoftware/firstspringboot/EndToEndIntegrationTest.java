@@ -1,8 +1,8 @@
 package com.viettelsoftware.firstspringboot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.viettelsoftware.firstspringboot.controller.model.CreateTaskRequest;
-import com.viettelsoftware.firstspringboot.controller.model.CreateUserRequest;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateTaskRequest;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateUserRequest;
 import com.viettelsoftware.firstspringboot.service.ObjectStorageService;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;

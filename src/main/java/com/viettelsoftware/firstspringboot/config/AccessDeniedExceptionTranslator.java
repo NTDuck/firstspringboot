@@ -1,10 +1,9 @@
 package com.viettelsoftware.firstspringboot.config;
 
 import com.viettelsoftware.firstspringboot.config.properties.DisplayProperties;
-import com.viettelsoftware.firstspringboot.controller.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.config.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.service.AuthenticationService;
-import com.viettelsoftware.firstspringboot.service.TraceService;
-import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
+import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.security.access.AccessDeniedException;
@@ -46,7 +45,7 @@ public class AccessDeniedExceptionTranslator implements AccessDeniedHandler {
     private String getUsername() {
         return authenticationService
                 .getCurrentAuthenticatedUser()
-                .map(AuthenticatedUser::getName)
+                .map(AuthenticatedUserDto::getName)
                 .orElse(displayProperties.getNullValue());
     }
 

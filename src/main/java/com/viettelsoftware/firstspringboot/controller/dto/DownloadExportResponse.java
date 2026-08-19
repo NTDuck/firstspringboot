@@ -1,10 +1,9 @@
-package com.viettelsoftware.firstspringboot.controller.model;
+package com.viettelsoftware.firstspringboot.controller.dto;
 
 import lombok.*;
 
 @Getter
 @Builder
-@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @AllArgsConstructor(staticName = "of")
 public class DownloadExportResponse {
     private final @NonNull String url;

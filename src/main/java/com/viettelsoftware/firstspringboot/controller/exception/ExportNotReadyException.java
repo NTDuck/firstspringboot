@@ -8,14 +8,15 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public class ExportNotReadyException extends BaseGloballyHandledException {
-    private final long exportId;
 
-    public static @NonNull ExportNotReadyException of(long exportId) {
+    private final @NonNull Long exportId;
+
+    public static ExportNotReadyException of(Long exportId) {
         return new ExportNotReadyException(exportId);
     }
 
     @Builder
-    public ExportNotReadyException(long exportId) {
+    public ExportNotReadyException(Long exportId) {
         super(
                 HttpStatus.BAD_REQUEST,
                 String.format("Export `%d` is not ready for download", exportId));
