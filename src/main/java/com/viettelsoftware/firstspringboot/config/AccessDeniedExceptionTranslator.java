@@ -1,8 +1,10 @@
 package com.viettelsoftware.firstspringboot.config;
 
+import com.viettelsoftware.firstspringboot.config.properties.DisplayProperties;
 import com.viettelsoftware.firstspringboot.controller.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.service.AuthenticationService;
-import lombok.NonNull;
+import com.viettelsoftware.firstspringboot.service.TraceService;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,16 +20,22 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-@Component
+// This Component lies in the Security Filter Chain
+// therefore uses `app.display.null-value`
+// instead of throwing like other Services
 @RequiredArgsConstructor
+@Component
 public class AccessDeniedExceptionTranslator implements AccessDeniedHandler {
+
     private final AuthenticationService authenticationService;
+    private final DisplayProperties displayProperties;
 
     @Override
-    public void handle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull AccessDeniedException exception)
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException exception)
             throws IOException, ServletException {
-        val username = authenticationService.getCurrentAuthenticatedUser().getName();
-        val operation = resolveOperation(request);
+
+        val username = getUsername();
+        val operation = getOperationFromHttpServletRequest(request);
 
         throw InsufficientAuthorizationException.builder()
                 .username(username)
@@ -35,12 +43,19 @@ public class AccessDeniedExceptionTranslator implements AccessDeniedHandler {
                 .build();
     }
 
-    private String resolveOperation(HttpServletRequest request) {
+    private String getUsername() {
+        return authenticationService
+                .getCurrentAuthenticatedUser()
+                .map(AuthenticatedUser::getName)
+                .orElse(displayProperties.getNullValue());
+    }
+
+    private String getOperationFromHttpServletRequest(HttpServletRequest request) {
         return Optional.ofNullable(request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE))
                 .filter(HandlerMethod.class::isInstance)
                 .map(HandlerMethod.class::cast)
                 .map(HandlerMethod::getMethod)
                 .map(Method::getName)
-                .orElse("N/A");
+                .orElse(displayProperties.getNullValue());
     }
 }

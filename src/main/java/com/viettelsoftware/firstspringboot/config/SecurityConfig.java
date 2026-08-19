@@ -1,5 +1,6 @@
 package com.viettelsoftware.firstspringboot.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,18 +14,15 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    @Autowired
-    private SecurityFilterChainExceptionHandler securityFilterChainExceptionHandler;
 
-    @Autowired
-    private AccessDeniedHandler accessDeniedHandler;
-
-    @Autowired
-    private JwtAuthenticationConverter jwtAuthenticationConverter;
+    private final SecurityFilterChainExceptionHandler securityFilterChainExceptionHandler;
+    private final AccessDeniedHandler accessDeniedHandler;
+    private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http

@@ -17,6 +17,7 @@ import java.io.IOException;
 // https://stackoverflow.com/questions/34595605/how-to-manage-exceptions-thrown-in-filters-in-spring
 @Component
 public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
+
     private final HandlerExceptionResolver resolver;
 
     public SecurityFilterChainExceptionHandler(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
@@ -32,7 +33,7 @@ public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } catch (BaseGloballyHandledException exception) {
-            // Routes to `GlobalExceptionHandler`
+            // Allows exception to be handled by GlobalExceptionHandler
             resolver.resolveException(request, response, null, exception);
         }
     }

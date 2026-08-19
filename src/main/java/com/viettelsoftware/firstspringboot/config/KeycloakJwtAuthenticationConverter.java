@@ -17,19 +17,14 @@ import java.util.stream.Collectors;
 @Component
 public class KeycloakJwtAuthenticationConverter extends JwtAuthenticationConverter {
 
-    private final KeycloakRealmRolesAuthoritiesConverter keycloakRealmRolesAuthoritiesConverter;
-
-    @Autowired
     public KeycloakJwtAuthenticationConverter(KeycloakRealmRolesAuthoritiesConverter keycloakRealmRolesAuthoritiesConverter) {
-        this.keycloakRealmRolesAuthoritiesConverter = keycloakRealmRolesAuthoritiesConverter;
         setPrincipalClaimName("preferred_username");
-        setJwtGrantedAuthoritiesConverter(
-                jwt -> keycloakRealmRolesAuthoritiesConverter.convert(jwt.getClaims())
-        );
+        setJwtGrantedAuthoritiesConverter(jwt ->
+                keycloakRealmRolesAuthoritiesConverter.convert(jwt.getClaims()));
     }
 
     @Component
-    private static class KeycloakRealmRolesAuthoritiesConverter
+    public static class KeycloakRealmRolesAuthoritiesConverter
             implements Converter<Map<@NonNull String, @NonNull Object>, Collection<@NonNull GrantedAuthority>> {
         @Override
         @SuppressWarnings("unchecked")
