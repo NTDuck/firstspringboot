@@ -11,6 +11,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @MappedSuperclass
 public abstract class ImportExport extends AuditableEntity {
@@ -40,10 +41,10 @@ public abstract class ImportExport extends AuditableEntity {
 
     @Transient
     public @Nullable Duration getTimeElapsed() {
-        val createdAt = getCreatedAt();
+        Instant createdAt = getCreatedAt();
         if (createdAt == null) return null;
 
-        val rhs = completedAt != null ? completedAt : Instant.now();
+        Instant rhs = completedAt != null ? completedAt : Instant.now();
         return Duration.between(createdAt, rhs);
     }
 }

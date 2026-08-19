@@ -10,5 +10,7 @@ public interface ExportService {
 
     @NonNull Export getById(long id);
 
+    @NonNull String getDownloadUrl(long id);
+
     void process(long id);
 }

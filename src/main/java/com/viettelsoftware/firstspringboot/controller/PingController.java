@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class PingController {
+
     @GetMapping("/ping")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void ping() {}
+    public void ping() { }
 }

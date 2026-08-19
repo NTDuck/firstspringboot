@@ -1,64 +1,76 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.controller.dto.CreateExportRequest;
-import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
-import com.viettelsoftware.firstspringboot.entity.Export;
-import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
+import com.viettelsoftware.firstspringboot.annotation.Auditable;
 import com.viettelsoftware.firstspringboot.config.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.controller.dto.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportAlreadyFailedException;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportNotReadyException;
+import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.repository.ExportRepository;
 import lombok.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ExportServiceImpl implements ExportService {
 
-    @Autowired
-    private ExportRepository exportRepository;
+    private static final Duration PRESIGNED_URL_EXPIRATION = Duration.ofDays(7);
+    private static final String XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-    @Autowired
-    private AuthenticationService authenticationService;
-
-    @Autowired
-    private Processor processor;
+    private final ExportRepository exportRepository;
+    private final AuthenticationService authenticationService;
+    private final Processor processor;
 
     @Override
+    @Auditable
+    @Transactional
     public @NonNull Export create(@NonNull CreateExportRequest request) {
-        AuthenticatedUserDto user = authenticationService.getCurrentAuthenticatedUser();
-        if (user == null) {
-            throw new InsufficientAuthorizationException("anonymous", "create export");
-        }
+        validateAuthenticatedUser();
 
-        Export.RequestedBy requestedBy = Export.RequestedBy.builder()
-                .username(user.getName())
-                .userId(user.getId())
-                .build();
-
-        Export export = Export.builder()
+        val export = Export.builder()
                 .type(request.getType())
                 .status(Export.Status.PENDING)
-                .requestedBy(requestedBy)
                 .build();
 
-        Export saved = exportRepository.save(export);
+        val saved = exportRepository.save(export);
         processor.process(saved.getId());
         return saved;
     }
 
     @Override
+    @Auditable
+    @Transactional(readOnly = true)
     public @NonNull Export getById(long id) {
         return exportRepository.findById(id)
                 .orElseThrow(() -> ExportNotFoundException.of(id));
+    }
+
+    @Override
+    @Auditable
+    @Transactional(readOnly = true)
+    public @NonNull String getDownloadUrl(long id) {
+        val export = getById(id);
+
+        if (export.getStatus() == Export.Status.FAILED) throw ExportAlreadyFailedException.of(id);
+        if (export.getStatus() != Export.Status.SUCCESS || export.getUrl() == null) throw ExportNotReadyException.of(id);
+
+        return export.getUrl();
     }
 
     @Override
@@ -66,80 +78,92 @@ public class ExportServiceImpl implements ExportService {
         processor.process(id);
     }
 
+    private void validateAuthenticatedUser() {
+        if (authenticationService.getCurrentAuthenticatedUser().isEmpty()) {
+            throw InsufficientAuthorizationException.builder()
+                    .username("anonymous")
+                    .operation("create export")
+                    .build();
+        }
+    }
+
+    @Slf4j
     @Component
+    @RequiredArgsConstructor
     public static class Processor {
 
-        private final @NonNull Logger logger = LoggerFactory.getLogger(this.getClass());
-
-        @Autowired
-        private ExportRepository exportRepository;
-
-        @Autowired
-        private TaskExportGenerator taskExportGenerator;
-
-        @Autowired
-        private UserExportGenerator userExportGenerator;
-
-        @Autowired
-        private ObjectStorageService objectStorageService;
+        private final ExportRepository exportRepository;
+        private final TaskExportGenerator taskExportGenerator;
+        private final UserExportGenerator userExportGenerator;
+        private final ObjectStorageService objectStorageService;
 
         @Async
         public void process(long exportId) {
-            Optional<Export> exportOptional = exportRepository.findById(exportId);
-            if (exportOptional.isEmpty()) {
-                return;
-            }
+            val exportOptional = exportRepository.findById(exportId);
+            if (exportOptional.isEmpty()) return;
 
-            Export export = exportOptional.get();
-            export.setStatus(Export.Status.PROCESSING);
-            exportRepository.save(export);
+            val export = exportOptional.get();
+            markProcessing(export);
 
-            long startTime = System.currentTimeMillis();
+            val startTime = System.currentTimeMillis();
             File tempFile = null;
             try {
-                String objectKey;
+                tempFile = generateExportFile(export.getType());
+                val objectKey = buildObjectKey(export.getType(), exportId);
 
-                if (export.getType() == Export.Type.TASK) {
-                    tempFile = taskExportGenerator.generate();
-                    objectKey = String.format("tasks-%d.xlsx", exportId);
-                } else {
-                    tempFile = userExportGenerator.generate();
-                    objectKey = String.format("users-%d.xlsx", exportId);
-                }
+                uploadExportFile(objectKey, tempFile);
 
-                try (InputStream inputStream = new BufferedInputStream(new FileInputStream(tempFile))) {
-                    objectStorageService.put(
-                            objectKey,
-                            inputStream,
-                            tempFile.length(),
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    );
-                }
-
-                String presignedUrl = objectStorageService.createPresignedDownloadUrl(objectKey, Duration.ofDays(7));
-                long elapsed = System.currentTimeMillis() - startTime;
-
-                export.setStatus(Export.Status.SUCCESS);
-                export.setUrl(presignedUrl);
-                export.setCompletedAt(Instant.now());
-                export.setTimeElapsed(elapsed);
-                exportRepository.save(export);
+                val presignedUrl = objectStorageService.createPresignedDownloadUrl(objectKey, PRESIGNED_URL_EXPIRATION);
+                markSuccess(export, presignedUrl, startTime);
 
             } catch (Exception exception) {
-                logger.error("Error occurred while processing export `{}`: {}", exportId, exception.getMessage(), exception);
-                long elapsed = System.currentTimeMillis() - startTime;
-                export.setStatus(Export.Status.FAILED);
-                export.setCompletedAt(Instant.now());
-                export.setTimeElapsed(elapsed);
-                exportRepository.save(export);
+                log.error("Error occurred while processing export `{}`: {}", exportId, exception.getMessage(), exception);
+                markFailed(export, startTime);
             } finally {
-                if (tempFile != null && tempFile.exists()) {
-                    try {
-                        Files.deleteIfExists(tempFile.toPath());
-                    } catch (Exception ignored) {
-                        tempFile.delete();
-                    }
-                }
+                cleanupTempFile(tempFile);
+            }
+        }
+
+        private void markProcessing(Export export) {
+            export.setStatus(Export.Status.PROCESSING);
+            exportRepository.save(export);
+        }
+
+        private File generateExportFile(Export.Type type) {
+            if (type == Export.Type.TASK) return taskExportGenerator.generate();
+            return userExportGenerator.generate();
+        }
+
+        private String buildObjectKey(Export.Type type, long exportId) {
+            val prefix = type == Export.Type.TASK ? "tasks" : "users";
+            return String.format("%s-%d.xlsx", prefix, exportId);
+        }
+
+        private void uploadExportFile(String objectKey, File tempFile) throws Exception {
+            try (InputStream inputStream = new BufferedInputStream(new FileInputStream(tempFile))) {
+                objectStorageService.put(objectKey, inputStream, tempFile.length(), XLSX_CONTENT_TYPE);
+            }
+        }
+
+        private void markSuccess(Export export, String presignedUrl, long startTime) {
+            export.setStatus(Export.Status.SUCCESS);
+            export.setUrl(presignedUrl);
+            export.setCompletedAt(Instant.now());
+            exportRepository.save(export);
+        }
+
+        private void markFailed(Export export, long startTime) {
+            export.setStatus(Export.Status.FAILED);
+            export.setCompletedAt(Instant.now());
+            exportRepository.save(export);
+        }
+
+        private void cleanupTempFile(File tempFile) {
+            if (tempFile == null || !tempFile.exists()) return;
+            try {
+                Files.deleteIfExists(tempFile.toPath());
+            } catch (Exception ignored) {
+                tempFile.delete();
             }
         }
     }

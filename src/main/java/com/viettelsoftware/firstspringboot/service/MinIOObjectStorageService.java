@@ -3,6 +3,7 @@ package com.viettelsoftware.firstspringboot.service;
 import io.minio.*;
 import io.minio.http.Method;
 import lombok.NonNull;
+import lombok.val;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,8 @@ import java.time.Duration;
 
 @Service
 public class MinIOObjectStorageService implements ObjectStorageService, InitializingBean {
+
+    private static final int MAX_EXPIRY_SECONDS = 7 * 24 * 3600;
 
     @Value("${minio.url}")
     private String minioUrl;
@@ -39,23 +42,16 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
     @Override
     public void put(@NonNull String objectKey, @NonNull InputStream file, long size, @NonNull String contentType) {
         try {
-            boolean bucketExists = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(bucketName).build()
-            );
-            if (!bucketExists) {
-                minioClient.makeBucket(
-                        MakeBucketArgs.builder().bucket(bucketName).build()
-                );
-            }
+            ensureBucketExists();
 
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(objectKey)
-                            .stream(file, size, -1)
-                            .contentType(contentType)
-                            .build()
-            );
+            val args = PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .stream(file, size, -1)
+                    .contentType(contentType)
+                    .build();
+
+            minioClient.putObject(args);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to upload file to MinIO", exception);
         }
@@ -69,12 +65,12 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
     @Override
     public void delete(@NonNull String objectKey) {
         try {
-            minioClient.removeObject(
-                    RemoveObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(objectKey)
-                            .build()
-            );
+            val args = RemoveObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .build();
+
+            minioClient.removeObject(args);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to delete file from MinIO", exception);
         }
@@ -83,15 +79,15 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
     @Override
     public @NonNull String createPresignedDownloadUrl(@NonNull String objectKey, @NonNull Duration expiration) {
         try {
-            int expirySeconds = (int) Math.max(1, Math.min(expiration.getSeconds(), 7 * 24 * 3600));
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucketName)
-                            .object(objectKey)
-                            .expiry(expirySeconds)
-                            .build()
-            );
+            val expirySeconds = clampExpiry(expiration);
+            val args = GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .expiry(expirySeconds)
+                    .build();
+
+            return minioClient.getPresignedObjectUrl(args);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to generate presigned download URL from MinIO", exception);
         }
@@ -100,24 +96,17 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
     @Override
     public @NonNull String createPresignedUploadUrl(@NonNull String objectKey, @NonNull Duration expiration) {
         try {
-            boolean bucketExists = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(bucketName).build()
-            );
-            if (!bucketExists) {
-                minioClient.makeBucket(
-                        MakeBucketArgs.builder().bucket(bucketName).build()
-                );
-            }
+            ensureBucketExists();
 
-            int expirySeconds = (int) Math.max(1, Math.min(expiration.getSeconds(), 7 * 24 * 3600));
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.PUT)
-                            .bucket(bucketName)
-                            .object(objectKey)
-                            .expiry(expirySeconds)
-                            .build()
-            );
+            val expirySeconds = clampExpiry(expiration);
+            val args = GetPresignedObjectUrlArgs.builder()
+                    .method(Method.PUT)
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .expiry(expirySeconds)
+                    .build();
+
+            return minioClient.getPresignedObjectUrl(args);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to generate presigned upload URL from MinIO", exception);
         }
@@ -126,12 +115,12 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
     @Override
     public @NonNull InputStream get(@NonNull String objectKey) {
         try {
-            return minioClient.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(objectKey)
-                            .build()
-            );
+            val args = GetObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .build();
+
+            return minioClient.getObject(args);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to get file from MinIO", exception);
         }
@@ -140,15 +129,27 @@ public class MinIOObjectStorageService implements ObjectStorageService, Initiali
     @Override
     public boolean exists(@NonNull String objectKey) {
         try {
-            minioClient.statObject(
-                    StatObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(objectKey)
-                            .build()
-            );
+            val args = StatObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .build();
+
+            minioClient.statObject(args);
             return true;
         } catch (Exception ignored) {
             return false;
         }
+    }
+
+    private void ensureBucketExists() throws Exception {
+        val existsArgs = BucketExistsArgs.builder().bucket(bucketName).build();
+        if (!minioClient.bucketExists(existsArgs)) {
+            val makeArgs = MakeBucketArgs.builder().bucket(bucketName).build();
+            minioClient.makeBucket(makeArgs);
+        }
+    }
+
+    private int clampExpiry(Duration expiration) {
+        return (int) Math.max(1, Math.min(expiration.getSeconds(), MAX_EXPIRY_SECONDS));
     }
 }

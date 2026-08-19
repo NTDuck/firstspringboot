@@ -1,124 +1,134 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
-import com.viettelsoftware.firstspringboot.entity.AuditEvent;
+import com.viettelsoftware.firstspringboot.annotation.Auditable;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
-import lombok.NonNull;
+import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import jakarta.ws.rs.core.Response;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private AuditService auditService;
-
-    @Autowired
-    private AuthenticationService authenticationService;
-
-    @Value("${keycloak.admin.server-url}")
+    @Value("${keycloak.admin.server-url:}")
     private String keycloakServerUrl;
 
-    @Value("${keycloak.admin.realm}")
+    @Value("${keycloak.admin.realm:master}")
     private String adminRealm;
 
-    @Value("${keycloak.admin.target-realm}")
+    @Value("${keycloak.admin.target-realm:firstspringbootrealm}")
     private String targetRealm;
 
-    @Value("${keycloak.admin.username}")
+    @Value("${keycloak.admin.username:admin}")
     private String adminUsername;
 
-    @Value("${keycloak.admin.password}")
+    @Value("${keycloak.admin.password:admin}")
     private String adminPassword;
 
-    @Value("${keycloak.admin.client-id}")
+    @Value("${keycloak.admin.client-id:admin-cli}")
     private String adminClientId;
 
     @Override
-    public List<@NonNull User> getUsers() {
-        audit("GET_USERS");
+    @Auditable
+    @Transactional(readOnly = true)
+    public List<User> getUsers() {
         return userRepository.findAll();
     }
 
     @Override
-    public Optional<@NonNull User> getUserByKeycloakUserId(@NonNull String keycloakUserId) {
-        audit("GET_USER_BY_KEYCLOAK_USER_ID");
+    @Auditable
+    @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "users", key = "#keycloakUserId")
+    public Optional<User> getUserByKeycloakUserId(String keycloakUserId) {
         return userRepository.findByKeycloakId(keycloakUserId);
     }
 
     @Override
-    public @NonNull User createUser(@NonNull User user) {
-        User userToSave = user;
-        try {
-            Keycloak keycloak = KeycloakBuilder.builder()
-                    .serverUrl(keycloakServerUrl)
-                    .realm(adminRealm)
-                    .username(adminUsername)
-                    .password(adminPassword)
-                    .clientId(adminClientId)
-                    .build();
-
-            UserRepresentation userRep = new UserRepresentation();
-            userRep.setUsername(user.getName());
-            userRep.setEmail(user.getEmail());
-            userRep.setFirstName(user.getFirstName());
-            userRep.setLastName(user.getLastName());
-            userRep.setEnabled(true);
-
-            try (Response response = keycloak.realm(targetRealm).users().create(userRep)) {
-                if (response.getStatus() == 201 && response.getLocation() != null) {
-                    String path = response.getLocation().getPath();
-                    String keycloakId = path.substring(path.lastIndexOf('/') + 1);
-                    if (!keycloakId.isBlank()) {
-                        userToSave = user.withKeycloakId(keycloakId);
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-            // User may already exist in Keycloak or Keycloak unavailable, proceed to local DB save
-        }
-
-        final User finalUserToSave = userToSave;
-        User saved = userRepository.findByKeycloakId(finalUserToSave.getKeycloakId())
-                .map(existing -> {
-                    existing.setName(finalUserToSave.getName());
-                    existing.setEmail(finalUserToSave.getEmail());
-                    existing.setFirstName(finalUserToSave.getFirstName());
-                    existing.setLastName(finalUserToSave.getLastName());
-                    return userRepository.save(existing);
-                })
-                .orElseGet(() -> userRepository.save(finalUserToSave));
-
-        audit("CREATE_USER");
-        return saved;
+    @Auditable
+    @Transactional
+    public User createUser(User user) {
+        val userWithKeycloakId = syncUserWithKeycloak(user);
+        return saveOrUpdateUser(userWithKeycloakId);
     }
 
-    private void audit(@NonNull String action) {
-        AuthenticatedUserDto authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
-        if (authenticatedUser == null) {
-            return;
+    private User syncUserWithKeycloak(User user) {
+        val createdKeycloakId = createKeycloakUser(user);
+        if (createdKeycloakId.isEmpty()) return user;
+
+        user.setKeycloakId(createdKeycloakId.get());
+        return user;
+    }
+
+    private Optional<String> createKeycloakUser(User user) {
+        if (keycloakServerUrl == null || keycloakServerUrl.isBlank()) return Optional.empty();
+
+        try {
+            val keycloak = buildKeycloakClient();
+            val userRep = buildUserRepresentation(user);
+
+            try (val response = keycloak.realm(targetRealm).users().create(userRep)) {
+                return extractKeycloakIdFromResponse(response);
+            }
+        } catch (Exception ignored) {
+            // User may already exist in Keycloak or Keycloak is unavailable, proceed to local DB save
+            return Optional.empty();
         }
+    }
 
-        AuditEvent auditEvent = AuditEvent.builder()
-                .serviceName(UserService.class.getSimpleName())
-                .actorUserId(authenticatedUser.getId())
-                .actorUsername(authenticatedUser.getName())
-                .action(action)
-                .result(true)
-                .exception(null)
+    private Keycloak buildKeycloakClient() {
+        return KeycloakBuilder.builder()
+                .serverUrl(keycloakServerUrl)
+                .realm(adminRealm)
+                .username(adminUsername)
+                .password(adminPassword)
+                .clientId(adminClientId)
                 .build();
+    }
 
-        auditService.audit(auditEvent);
+    private UserRepresentation buildUserRepresentation(User user) {
+        val userRep = new UserRepresentation();
+        userRep.setUsername(user.getName());
+        userRep.setEmail(user.getEmail());
+        userRep.setFirstName(user.getFirstName());
+        userRep.setLastName(user.getLastName());
+        userRep.setEnabled(true);
+        return userRep;
+    }
+
+    private Optional<String> extractKeycloakIdFromResponse(Response response) {
+        if (response.getStatus() != 201 || response.getLocation() == null) return Optional.empty();
+
+        val path = response.getLocation().getPath();
+        val keycloakId = path.substring(path.lastIndexOf('/') + 1);
+        if (keycloakId.isBlank()) return Optional.empty();
+
+        return Optional.of(keycloakId);
+    }
+
+    private User saveOrUpdateUser(User user) {
+        return userRepository.findByKeycloakId(user.getKeycloakId())
+                .map(existing -> updateUserFields(existing, user))
+                .orElseGet(() -> userRepository.save(user));
+    }
+
+    private User updateUserFields(User existing, User user) {
+        existing.setName(user.getName());
+        existing.setEmail(user.getEmail());
+        existing.setFirstName(user.getFirstName());
+        existing.setLastName(user.getLastName());
+        return userRepository.save(existing);
     }
 }

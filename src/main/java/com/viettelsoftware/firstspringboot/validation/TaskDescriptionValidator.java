@@ -9,21 +9,10 @@ public class TaskDescriptionValidator implements ConstraintValidator<ValidTaskDe
 
     @Override
     public boolean isValid(@Nullable String value, ConstraintValidatorContext context) {
-        if (value == null) {
-            return false;
-        }
+        if (value == null) return false;
+        if (value.isEmpty() || value.length() > 255) return false;
+        if (Character.isWhitespace(value.charAt(0)) || Character.isWhitespace(value.charAt(value.length() - 1))) return false;
 
-        if (value.isEmpty()) {
-            return false;
-        }
-        if (value.length() > 255) {
-            return false;
-        }
-
-        if (Character.isWhitespace(value.charAt(0)) || Character.isWhitespace(value.charAt(value.length() - 1))) {
-            return false;
-        }
-        
         return true;
     }
 }
