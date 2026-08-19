@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.dto;
+package com.viettelsoftware.firstspringboot.controller.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;

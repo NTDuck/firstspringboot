@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.controller.model.CreateExportRequest;
 import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;

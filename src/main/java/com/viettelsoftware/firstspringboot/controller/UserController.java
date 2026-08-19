@@ -1,9 +1,9 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
-import com.viettelsoftware.firstspringboot.dto.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.dto.CreateUserRequest;
-import com.viettelsoftware.firstspringboot.dto.GetUserResponse;
+import com.viettelsoftware.firstspringboot.controller.model.CreateExportRequest;
+import com.viettelsoftware.firstspringboot.controller.model.CreateImportRequest;
+import com.viettelsoftware.firstspringboot.controller.model.CreateUserRequest;
+import com.viettelsoftware.firstspringboot.controller.model.GetUserResponse;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.User;

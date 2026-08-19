@@ -1,5 +1,6 @@
 package com.viettelsoftware.firstspringboot.dto;
 
+import com.viettelsoftware.firstspringboot.controller.model.CreateUserRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

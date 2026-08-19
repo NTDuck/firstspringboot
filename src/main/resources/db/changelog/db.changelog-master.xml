@@ -10,5 +10,6 @@
     <include file="changes/03-create-audit-events-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/04-create-exports-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/05-create-imports-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/06-update-entities-schema.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

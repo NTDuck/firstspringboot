@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.CreateImportRequest;
+import com.viettelsoftware.firstspringboot.controller.model.CreateImportRequest;
 import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;

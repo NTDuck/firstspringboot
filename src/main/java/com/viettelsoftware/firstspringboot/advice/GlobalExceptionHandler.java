@@ -1,23 +1,25 @@
 package com.viettelsoftware.firstspringboot.advice;
 
 import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
+import com.viettelsoftware.firstspringboot.service.TraceService;
+import lombok.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
-import java.util.UUID;
 
+@RequiredArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final TraceService traceService;
+
     @ExceptionHandler(BaseGloballyHandledException.class)
-    public @NonNull ResponseEntity<Payload> handle(@NonNull BaseGloballyHandledException exception, @NonNull HttpServletRequest request) {
+    public ResponseEntity<Payload> handle(BaseGloballyHandledException exception, HttpServletRequest request) {
         val payload = Payload.builder()
+                .traceId(traceService.getCurrentTraceId())
                 .status(exception.getHttpStatus().value())
                 .error(exception.getError())
                 .message(exception.getMessage())
@@ -29,14 +31,13 @@ public class GlobalExceptionHandler {
     @Getter
     @Builder
     public static class Payload {
-        @Builder.Default
-        private final @NonNull Instant timestamp = Instant.now();
 
         @Builder.Default
-        private final @NonNull UUID traceId = UUID.randomUUID(); // service, tts,
+        private final Instant timestamp = Instant.now();
+        private final String traceId;
 
         private final int status;
-        private final @NonNull String error;
-        private final @NonNull String message;
+        private final String error;
+        private final String message;
     }
 }

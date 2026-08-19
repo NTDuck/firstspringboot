@@ -1,4 +1,4 @@
-package com.viettelsoftware.firstspringboot.dto;
+package com.viettelsoftware.firstspringboot.controller.model;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="6" author="firstspringbootmariadbuser">
+        <!-- Update tasks table -->
+        <renameColumn tableName="tasks" oldColumnName="task" newColumnName="description" columnDataType="varchar(255)"/>
+        <addColumn tableName="tasks">
+            <column name="created_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Update users table -->
+        <addColumn tableName="users">
+            <column name="created_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Update exports table -->
+        <dropColumn tableName="exports" columnName="time_elapsed"/>
+        <dropColumn tableName="exports" columnName="requested_by_username"/>
+        <renameColumn tableName="exports" oldColumnName="requested_by_user_id" newColumnName="created_by_user_id" columnDataType="bigint"/>
+        <addColumn tableName="exports">
+            <column name="last_modified_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropIndex indexName="idx_exports_status_created" tableName="exports"/>
+        <createIndex indexName="idx_exports_status_created_at" tableName="exports">
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <!-- Update imports table -->
+        <dropColumn tableName="imports" columnName="time_elapsed"/>
+        <dropColumn tableName="imports" columnName="requested_by_username"/>
+        <renameColumn tableName="imports" oldColumnName="requested_by_user_id" newColumnName="created_by_user_id" columnDataType="bigint"/>
+        <addColumn tableName="imports">
+            <column name="last_modified_at" type="timestamp(6)" defaultValueComputed="CURRENT_TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by_user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropIndex indexName="idx_imports_status_created" tableName="imports"/>
+        <createIndex indexName="idx_imports_status_created_at" tableName="imports">
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <!-- Update audit_events table -->
+        <dropIndex indexName="idx_audit_service_timestamp" tableName="audit_events"/>
+        <dropIndex indexName="idx_audit_actor_timestamp" tableName="audit_events"/>
+        <renameColumn tableName="audit_events" oldColumnName="timestamp" newColumnName="created_at" columnDataType="timestamp(6)"/>
+        <createIndex indexName="idx_audit_service_name_created_at" tableName="audit_events">
+            <column name="service_name"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex indexName="idx_audit_actor_user_id_created_at" tableName="audit_events">
+            <column name="actor_user_id"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

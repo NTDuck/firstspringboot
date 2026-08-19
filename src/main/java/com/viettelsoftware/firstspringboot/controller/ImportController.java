@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.dto.ImportResponse;
+import com.viettelsoftware.firstspringboot.controller.model.ImportResponse;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.service.ImportService;
 import lombok.NonNull;
