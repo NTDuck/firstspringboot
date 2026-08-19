@@ -1,7 +1,9 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.entity.Export;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportAlreadyFailedException;
 import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportNotReadyException;
+import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.service.ExportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -33,15 +36,13 @@ class ExportControllerTest {
     @Test
     void testGetExportStatusSuccess() throws Exception {
         Export export = Export.builder()
-                .id(1L)
                 .type(Export.Type.TASK)
                 .status(Export.Status.SUCCESS)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(10L).build())
-                .createdAt(Instant.now())
-                .completedAt(Instant.now())
-                .timeElapsed(100L)
                 .url("http://localhost:9000/bucket/tasks-1.xlsx")
                 .build();
+        ReflectionTestUtils.setField(export, "id", 1L);
+        ReflectionTestUtils.setField(export, "createdAt", Instant.now());
+        ReflectionTestUtils.setField(export, "completedAt", Instant.now());
 
         when(exportService.getById(1L)).thenReturn(export);
 
@@ -69,18 +70,7 @@ class ExportControllerTest {
 
     @Test
     void testDownloadExportSuccess() throws Exception {
-        Export export = Export.builder()
-                .id(1L)
-                .type(Export.Type.TASK)
-                .status(Export.Status.SUCCESS)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(10L).build())
-                .createdAt(Instant.now())
-                .completedAt(Instant.now())
-                .timeElapsed(100L)
-                .url("http://localhost:9000/bucket/tasks-1.xlsx?sig=xyz")
-                .build();
-
-        when(exportService.getById(1L)).thenReturn(export);
+        when(exportService.getDownloadUrl(1L)).thenReturn("http://localhost:9000/bucket/tasks-1.xlsx?sig=xyz");
 
         mockMvc.perform(get("/api/v1/exports/1/download")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
@@ -91,15 +81,7 @@ class ExportControllerTest {
 
     @Test
     void testDownloadExportNotReadyWhenPending() throws Exception {
-        Export export = Export.builder()
-                .id(2L)
-                .type(Export.Type.USER)
-                .status(Export.Status.PENDING)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(10L).build())
-                .createdAt(Instant.now())
-                .build();
-
-        when(exportService.getById(2L)).thenReturn(export);
+        when(exportService.getDownloadUrl(2L)).thenThrow(ExportNotReadyException.of(2L));
 
         mockMvc.perform(get("/api/v1/exports/2/download")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
@@ -110,38 +92,8 @@ class ExportControllerTest {
     }
 
     @Test
-    void testDownloadExportNotReadyWhenProcessing() throws Exception {
-        Export export = Export.builder()
-                .id(3L)
-                .type(Export.Type.USER)
-                .status(Export.Status.PROCESSING)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(10L).build())
-                .createdAt(Instant.now())
-                .build();
-
-        when(exportService.getById(3L)).thenReturn(export);
-
-        mockMvc.perform(get("/api/v1/exports/3/download")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
-                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
-                .andExpect(jsonPath("$.message").value("Export `3` is not ready for download"));
-    }
-
-    @Test
     void testDownloadExportAlreadyFailed() throws Exception {
-        Export export = Export.builder()
-                .id(4L)
-                .type(Export.Type.TASK)
-                .status(Export.Status.FAILED)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(10L).build())
-                .createdAt(Instant.now())
-                .completedAt(Instant.now())
-                .timeElapsed(50L)
-                .build();
-
-        when(exportService.getById(4L)).thenReturn(export);
+        when(exportService.getDownloadUrl(4L)).thenThrow(ExportAlreadyFailedException.of(4L));
 
         mockMvc.perform(get("/api/v1/exports/4/download")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))

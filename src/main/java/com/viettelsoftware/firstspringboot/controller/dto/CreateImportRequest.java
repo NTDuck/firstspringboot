@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.controller.dto;
 
-import com.viettelsoftware.firstspringboot.entity.Import;
+import com.viettelsoftware.firstspringboot.entity.abc.ImportExport;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,5 +11,5 @@ import lombok.NonNull;
 @AllArgsConstructor(staticName = "of")
 public class CreateImportRequest {
 
-    private final @NonNull Import.Type type;
+    private final @NonNull ImportExport.Type type;
 }

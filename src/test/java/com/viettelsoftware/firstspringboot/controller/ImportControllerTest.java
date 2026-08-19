@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.controller;
 
-import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.controller.exception.ImportNotFoundException;
+import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.service.ImportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,16 +9,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -33,15 +35,13 @@ class ImportControllerTest {
     @Test
     void testGetImportStatusSuccess() throws Exception {
         Import importEntity = Import.builder()
-                .id(1L)
                 .type(Import.Type.TASK)
                 .status(Import.Status.SUCCESS)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(10L).build())
-                .createdAt(Instant.now())
-                .completedAt(Instant.now())
-                .timeElapsed(100L)
                 .url("http://localhost:9000/bucket/imports-1.xlsx?upload=true")
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 1L);
+        ReflectionTestUtils.setField(importEntity, "createdAt", Instant.now());
+        ReflectionTestUtils.setField(importEntity, "completedAt", Instant.now());
 
         when(importService.getById(1L)).thenReturn(importEntity);
 
@@ -66,5 +66,4 @@ class ImportControllerTest {
                 .andExpect(jsonPath("$.error").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("Import `999` not found"));
     }
-
 }

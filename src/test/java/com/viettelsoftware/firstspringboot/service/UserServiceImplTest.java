@@ -1,14 +1,13 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,30 +21,19 @@ class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
-    private AuditService auditService;
-
-    @Mock
-    private AuthenticationService authenticationService;
-
     @InjectMocks
     private UserServiceImpl userService;
-
-    @BeforeEach
-    void setUp() {
-        lenient().when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(AuthenticatedUserDto.builder().id(1L).name("testuser").roles(List.of()).build());
-    }
 
     @Test
     void testGetUsers() {
         User u = User.builder()
-                .id(1L)
                 .keycloakId("k1")
                 .name("John")
                 .email("john@example.com")
                 .firstName("John")
                 .lastName("Doe")
                 .build();
+        ReflectionTestUtils.setField(u, "id", 1L);
 
         when(userRepository.findAll()).thenReturn(List.of(u));
 
@@ -59,13 +47,13 @@ class UserServiceImplTest {
     @Test
     void testGetUserByKeycloakUserId() {
         User u = User.builder()
-                .id(1L)
                 .keycloakId("k1")
                 .name("John")
                 .email("john@example.com")
                 .firstName("John")
                 .lastName("Doe")
                 .build();
+        ReflectionTestUtils.setField(u, "id", 1L);
 
         when(userRepository.findByKeycloakId("k1")).thenReturn(Optional.of(u));
 
@@ -93,6 +81,6 @@ class UserServiceImplTest {
 
         assertNotNull(created);
         assertEquals("k2", created.getKeycloakId());
-        verify(userRepository, times(1)).save(u);
+        verify(userRepository, times(1)).save(any(User.class));
     }
 }

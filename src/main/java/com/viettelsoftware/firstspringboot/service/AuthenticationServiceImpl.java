@@ -1,8 +1,8 @@
 package com.viettelsoftware.firstspringboot.service;
 
+import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
 import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
-import com.viettelsoftware.firstspringboot.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.security.core.Authentication;
@@ -68,9 +68,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private Optional<String> getUsernameFromJwt(Jwt jwt) {
         val username = jwt.getClaimAsString(StandardClaimNames.PREFERRED_USERNAME);
+        if (username != null && !username.isBlank()) return Optional.of(username);
 
-        if (username == null || username.isBlank()) return Optional.empty();
-        return Optional.of(username);
+        val name = jwt.getClaimAsString("name");
+        if (name != null && !name.isBlank()) return Optional.of(name);
+
+        val subject = jwt.getSubject();
+        if (subject != null && !subject.isBlank()) return Optional.of(subject);
+
+        return Optional.empty();
     }
 
     private List<String> getUserRolesFromAuthentication(Authentication authentication) {

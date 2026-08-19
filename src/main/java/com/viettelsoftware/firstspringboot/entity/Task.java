@@ -2,13 +2,17 @@ package com.viettelsoftware.firstspringboot.entity;
 
 import com.viettelsoftware.firstspringboot.entity.abc.AuditableEntity;
 import lombok.*;
-import javax.persistence.*;
+import lombok.experimental.SuperBuilder;
 
-// https://www.javaguides.net/2020/01/spring-boot-mariadb-crud-example-tutorial.html
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor(staticName = "of")
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "tasks")
 public class Task extends AuditableEntity {

@@ -1,7 +1,6 @@
 package com.viettelsoftware.firstspringboot.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -24,6 +23,7 @@ public class SecurityConfig {
     private final AccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .addFilterBefore(securityFilterChainExceptionHandler, LogoutFilter.class)

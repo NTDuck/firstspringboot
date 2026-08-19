@@ -12,7 +12,7 @@ import javax.persistence.Table;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User extends AuditableEntity {

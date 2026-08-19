@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,7 +24,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,11 +87,10 @@ class ImportServiceImplProcessorTest {
     @Test
     void testProcessValidTaskImport() throws Exception {
         Import importEntity = Import.builder()
-                .id(1L)
                 .type(Import.Type.TASK)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 1L);
 
         byte[] excelBytes = createTasksExcel(new String[][]{
                 {"1", "Clean Desk"},
@@ -103,8 +103,11 @@ class ImportServiceImplProcessorTest {
                 .thenReturn(new ByteArrayInputStream(excelBytes))
                 .thenReturn(new ByteArrayInputStream(excelBytes));
 
+        Task existingTask = Task.builder().description("Old").build();
+        ReflectionTestUtils.setField(existingTask, "id", 1L);
+
         when(taskRepository.existsById(1L)).thenReturn(true);
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(Task.builder().id(1L).description("Old").build()));
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(existingTask));
 
         processor.process(1L);
 
@@ -115,17 +118,15 @@ class ImportServiceImplProcessorTest {
         Import finalSaved = captor.getValue();
         assertEquals(Import.Status.SUCCESS, finalSaved.getStatus());
         assertNotNull(finalSaved.getCompletedAt());
-        assertNotNull(finalSaved.getTimeElapsed());
     }
 
     @Test
     void testProcessInvalidTaskRowFails() throws Exception {
         Import importEntity = Import.builder()
-                .id(2L)
                 .type(Import.Type.TASK)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 2L);
 
         // Leading/trailing whitespace violates task description rule
         byte[] excelBytes = createTasksExcel(new String[][]{
@@ -149,11 +150,10 @@ class ImportServiceImplProcessorTest {
     @Test
     void testProcessTaskCrossRowDuplicateIdFails() throws Exception {
         Import importEntity = Import.builder()
-                .id(3L)
                 .type(Import.Type.TASK)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 3L);
 
         // Duplicate ID 10
         byte[] excelBytes = createTasksExcel(new String[][]{
@@ -178,11 +178,10 @@ class ImportServiceImplProcessorTest {
     @Test
     void testProcessValidUserImport() throws Exception {
         Import importEntity = Import.builder()
-                .id(4L)
                 .type(Import.Type.USER)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 4L);
 
         byte[] excelBytes = createUsersExcel(new String[][]{
                 {"1", "kc-123", "alice", "alice@example.com", "Alice", "Smith"}
@@ -209,11 +208,10 @@ class ImportServiceImplProcessorTest {
     @Test
     void testProcessInvalidUserRowFails() throws Exception {
         Import importEntity = Import.builder()
-                .id(5L)
                 .type(Import.Type.USER)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 5L);
 
         // Invalid email format
         byte[] excelBytes = createUsersExcel(new String[][]{
@@ -237,11 +235,10 @@ class ImportServiceImplProcessorTest {
     @Test
     void testProcessUserCrossRowDuplicateUsernameFails() throws Exception {
         Import importEntity = Import.builder()
-                .id(6L)
                 .type(Import.Type.USER)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 6L);
 
         // Duplicate username "alice"
         byte[] excelBytes = createUsersExcel(new String[][]{
@@ -266,11 +263,10 @@ class ImportServiceImplProcessorTest {
     @Test
     void testProcessMalformedFileFails() {
         Import importEntity = Import.builder()
-                .id(7L)
                 .type(Import.Type.TASK)
                 .status(Import.Status.PENDING)
-                .requestedBy(Import.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(importEntity, "id", 7L);
 
         when(importRepository.findById(7L)).thenReturn(Optional.of(importEntity));
         when(objectStorageService.exists("imports-7.xlsx")).thenReturn(true);

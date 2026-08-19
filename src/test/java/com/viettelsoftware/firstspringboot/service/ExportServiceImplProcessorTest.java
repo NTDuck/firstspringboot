@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,11 +42,10 @@ class ExportServiceImplProcessorTest {
     @Test
     void testProcessTaskExportSuccess() throws Exception {
         Export export = Export.builder()
-                .id(1L)
                 .type(Export.Type.TASK)
                 .status(Export.Status.PENDING)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(export, "id", 1L);
 
         File tempFile = File.createTempFile("test-task-", ".xlsx");
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
@@ -67,17 +67,15 @@ class ExportServiceImplProcessorTest {
         assertEquals(Export.Status.SUCCESS, finalSaved.getStatus());
         assertEquals("http://localhost:9000/bucket/tasks-1.xlsx", finalSaved.getUrl());
         assertNotNull(finalSaved.getCompletedAt());
-        assertNotNull(finalSaved.getTimeElapsed());
     }
 
     @Test
     void testProcessUserExportSuccess() throws Exception {
         Export export = Export.builder()
-                .id(2L)
                 .type(Export.Type.USER)
                 .status(Export.Status.PENDING)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(export, "id", 2L);
 
         File tempFile = File.createTempFile("test-user-", ".xlsx");
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
@@ -103,11 +101,11 @@ class ExportServiceImplProcessorTest {
     @Test
     void testProcessExportFailure() {
         Export export = Export.builder()
-                .id(3L)
                 .type(Export.Type.TASK)
                 .status(Export.Status.PENDING)
-                .requestedBy(Export.RequestedBy.builder().username("testuser").userId(1L).build())
                 .build();
+        ReflectionTestUtils.setField(export, "id", 3L);
+
         when(exportRepository.findById(3L)).thenReturn(Optional.of(export));
         when(taskExportGenerator.generate()).thenThrow(new RuntimeException("Generation failed"));
 
@@ -119,7 +117,6 @@ class ExportServiceImplProcessorTest {
         Export finalSaved = captor.getValue();
         assertEquals(Export.Status.FAILED, finalSaved.getStatus());
         assertNotNull(finalSaved.getCompletedAt());
-        assertNotNull(finalSaved.getTimeElapsed());
     }
 
     @Test
