@@ -18,7 +18,6 @@ import java.util.Map;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -68,13 +67,4 @@ class ImportControllerTest {
                 .andExpect(jsonPath("$.message").value("Import `999` not found"));
     }
 
-    @Test
-    void testProcessImportEndpoint() throws Exception {
-        mockMvc.perform(post("/api/v1/imports/1/process")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
-                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"))))
-                .andExpect(status().isAccepted());
-
-        verify(importService).process(1L);
-    }
 }

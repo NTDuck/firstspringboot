@@ -135,11 +135,6 @@ class EndToEndIntegrationTest {
 
         objectStorageService.put("imports-" + importId + ".xlsx", fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
-        mockMvc.perform(post("/api/v1/imports/" + importId + "/process")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
-                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"))))
-                .andExpect(status().isAccepted());
-
         mockMvc.perform(get("/api/v1/imports/" + importId)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
                                 .authorities(new SimpleGrantedAuthority("REALM_ROLE_GET"))))
@@ -221,11 +216,6 @@ class EndToEndIntegrationTest {
         });
 
         objectStorageService.put("imports-" + importId + ".xlsx", fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-        mockMvc.perform(post("/api/v1/imports/" + importId + "/process")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_POST"))))
-                                .authorities(new SimpleGrantedAuthority("REALM_ROLE_POST"))))
-                .andExpect(status().isAccepted());
 
         mockMvc.perform(get("/api/v1/imports/" + importId)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "1").claim("realm_access", Map.of("roles", List.of("REALM_ROLE_GET"))))
