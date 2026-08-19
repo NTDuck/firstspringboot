@@ -1,86 +1,86 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.service.dto.AuthenticatedUserDto;
-import com.viettelsoftware.firstspringboot.entity.AuditEvent;
+import com.viettelsoftware.firstspringboot.annotation.Auditable;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
+import com.viettelsoftware.firstspringboot.service.dto.TaskWithoutIdDto;
+import com.viettelsoftware.firstspringboot.service.exception.TaskNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 public class TaskServiceImpl implements TaskService {
 
-    private TaskRepository taskRepository;
-
-    private AuditService auditService;
-    private AuthenticationService authenticationService;
+    private final TaskRepository taskRepository;
 
     @Override
-    public Long count() {
-        audit("COUNT");
+    @Auditable
+    @Transactional(readOnly = true)
+    public long count() {
         return taskRepository.count();
     }
 
     @Override
-    public Optional<Task> getTaskById(Long taskId) {
-        audit("GET_TASK_BY_ID");
-        return taskRepository.findById(taskId);
+    @Auditable
+    @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "tasks", key = "#taskId")
+    public Task getTaskById(Long taskId) throws TaskNotFoundException {
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> TaskNotFoundException.of(taskId));
     }
 
     @Override
+    @Auditable
+    @Transactional(readOnly = true)
     public List<Task> getTasks() {
-        audit("GET_TASKS");
         return taskRepository.findAll();
     }
 
     @Override
-    public Task createTask(Task task) {
-        Task created = taskRepository.save(task);
-        audit("CREATE_TASK");
-        return created;
-    }
-
-    @Override
-    public Optional<Task> updateTask(Long taskId, String description) {
-        Optional<Task> updatedTask = taskRepository.findById(taskId)
-                .map(task -> taskRepository.save(task.withDescription(description)));
-
-        audit("UPDATE_TASK");
-        return updatedTask;
-    }
-
-    @Override
-    public void deleteTaskById(Long taskId) {
-        taskRepository.deleteById(taskId);
-        audit("DELETE_TASK_BY_ID");
-    }
-
-    @Override
-    public void deleteTasks() {
-        taskRepository.deleteAll();
-        audit("DELETE_TASKS");
-    }
-
-    private void audit(String action) {
-        AuthenticatedUserDto authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
-        if (authenticatedUser == null) {
-            return;
-        }
-
-        AuditEvent auditEvent = AuditEvent.builder()
-                .serviceName(TaskService.class.getSimpleName())
-                .actorUserId(authenticatedUser.getId())
-                .actorUsername(authenticatedUser.getName())
-                .action(action)
-                .result(true)
-                .exception(null)
+    @Auditable
+    @Transactional
+    @CachePut
+    public Task createTask(TaskWithoutIdDto taskWithoutId) {
+        val task = Task.builder()
+                .description(taskWithoutId.getDescription())
                 .build();
 
-        auditService.audit(auditEvent);
+        return taskRepository.save(task);
+    }
+
+    @Override
+    @Auditable
+    @CacheEvict(value = "tasks", key = "#taskId")
+    public void updateTask(Long taskId, TaskWithoutIdDto taskWithoutId) throws TaskNotFoundException {
+        val task = taskRepository.findById(taskId)
+                .orElseThrow(() -> TaskNotFoundException.of(taskId));
+
+        task.setDescription(taskWithoutId.getDescription());
+        taskRepository.save(task);
+    }
+
+    @Override
+    @Auditable
+    @CacheEvict(value = "tasks", key = "#taskId")
+    public void deleteTaskById(Long taskId) throws TaskNotFoundException {
+        val task = taskRepository.findById(taskId)
+                .orElseThrow(() -> TaskNotFoundException.of(taskId));
+
+        taskRepository.delete(task);
+    }
+
+    @Override
+    @Auditable
+    @CacheEvict
+    public void deleteTasks() {
+        taskRepository.deleteAllInBatch();
     }
 }

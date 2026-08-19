@@ -2,57 +2,84 @@ package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.repository.AuditEventRepository;
-import lombok.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.viettelsoftware.firstspringboot.repository.dto.AuditEventSpecifications;
+import com.viettelsoftware.firstspringboot.service.dto.AuditEventsQueryFilterDto;
+import com.viettelsoftware.firstspringboot.service.exception.CurrentAuthenticatedUserNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-
+@RequiredArgsConstructor
 @Service
 public class AuditServiceImpl implements AuditService {
 
-    @Autowired
-    private AuditEventRepository auditEventRepository;
+    private final AuditEventRepository auditEventRepository;
+
+    private final AuthenticationService authenticationService;
 
     @Override
-    public void audit(@NonNull AuditEvent event) {
-        auditEventRepository.save(event);
+    @Transactional
+    public void auditSuccess(String serviceName, String action) throws CurrentAuthenticatedUserNotFoundException {
+        val user = authenticationService.getCurrentAuthenticatedUser()
+                .orElseThrow(CurrentAuthenticatedUserNotFoundException::of);
+
+        val auditEvent = AuditEvent.builder()
+                .service(AuditEvent.Service.builder()
+                        .name(serviceName)
+                        .build())
+                .actor(AuditEvent.Actor.builder()
+                        .userId(user.getId())
+                        .username(user.getName())
+                        .build())
+                .action(action)
+                .result(true)
+                .exception(null)
+                .build();
+
+        auditEventRepository.save(auditEvent);
     }
 
     @Override
-    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByDay(@NonNull LocalDate day, @NonNull Pageable pageable) {
-        Instant startOfDay = day.atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant endOfDay = day.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
-        return auditEventRepository.findByTimestampBetween(startOfDay, endOfDay, pageable);
+    @Transactional
+    public void auditFailure(String serviceName, String action, Exception exception) throws CurrentAuthenticatedUserNotFoundException {
+        val user = authenticationService.getCurrentAuthenticatedUser()
+                .orElseThrow(CurrentAuthenticatedUserNotFoundException::of);
+
+        val auditEvent = AuditEvent.builder()
+                .service(AuditEvent.Service.builder()
+                        .name(serviceName)
+                        .build())
+                .actor(AuditEvent.Actor.builder()
+                        .userId(user.getId())
+                        .username(user.getName())
+                        .build())
+                .action(action)
+                .result(true)
+                .exception(null)
+                .build();
     }
 
     @Override
-    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByServiceName(@NonNull String serviceName, @NonNull Pageable pageable) {
-        return auditEventRepository.findByServiceName(serviceName, pageable);
-    }
+    @Transactional(readOnly = true)
+    public Page<AuditEvent> getAuditEvents(AuditEventsQueryFilterDto filter, Pageable pageable) {
+        val specification = Specification
+                .where(AuditEventSpecifications.hasDay(
+                        filter.getDay()))
+                .and(AuditEventSpecifications.hasServiceName(
+                        filter.getServiceName()))
+                .and(AuditEventSpecifications.hasActorUserId(
+                        filter.getActorUserId()))
+                .and(AuditEventSpecifications.hasActorUsername(
+                        filter.getActorUsername()))
+                .and(AuditEventSpecifications.hasAction(
+                        filter.getAction()))
+                .and(AuditEventSpecifications.hasResult(
+                        filter.getResult()));
 
-    @Override
-    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByActorUserId(@NonNull Long actorUserId, @NonNull Pageable pageable) {
-        return auditEventRepository.findByActorUserId(actorUserId, pageable);
-    }
-
-    @Override
-    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByActorUsername(@NonNull String actorUsername, @NonNull Pageable pageable) {
-        return auditEventRepository.findByActorUsername(actorUsername, pageable);
-    }
-
-    @Override
-    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByAction(@NonNull String action, @NonNull Pageable pageable) {
-        return auditEventRepository.findByAction(action, pageable);
-    }
-
-    @Override
-    public @NonNull Page<@NonNull AuditEvent> getAuditEventsByResult(@NonNull Boolean result, @NonNull Pageable pageable) {
-        return auditEventRepository.findByResult(result, pageable);
+        return auditEventRepository.findAll(specification, pageable);
     }
 }

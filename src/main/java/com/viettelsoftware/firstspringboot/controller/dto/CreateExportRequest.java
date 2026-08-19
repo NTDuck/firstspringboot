@@ -10,5 +10,6 @@ import lombok.NonNull;
 @Builder
 @AllArgsConstructor(staticName = "of")
 public class CreateExportRequest {
+
     private final @NonNull Export.Type type;
 }

@@ -1,17 +1,16 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.entity.Task;
-import com.viettelsoftware.firstspringboot.service.exception.TaskNotFoundException;
 import com.viettelsoftware.firstspringboot.service.dto.TaskWithoutIdDto;
+import com.viettelsoftware.firstspringboot.service.exception.TaskNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface TaskService {
 
-    Long count();
+    long count();
 
-    Optional<Task> getTaskById(Long taskId);
+    Task getTaskById(Long taskId) throws TaskNotFoundException;
 
     List<Task> getTasks();
 

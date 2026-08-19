@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.config.exception;
 
-import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
+import com.viettelsoftware.firstspringboot.exception.abc.BaseGloballyHandledException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;

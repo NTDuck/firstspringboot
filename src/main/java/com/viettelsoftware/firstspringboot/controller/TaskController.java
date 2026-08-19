@@ -2,12 +2,10 @@ package com.viettelsoftware.firstspringboot.controller;
 
 import com.viettelsoftware.firstspringboot.controller.dto.CreateExportRequest;
 import com.viettelsoftware.firstspringboot.controller.dto.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.controller.dto.CreateTaskRequest;
-import com.viettelsoftware.firstspringboot.controller.dto.UpdateTaskRequest;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;
-import com.viettelsoftware.firstspringboot.controller.exception.TaskNotFoundException;
+import com.viettelsoftware.firstspringboot.service.dto.TaskWithoutIdDto;
 import com.viettelsoftware.firstspringboot.service.ExportService;
 import com.viettelsoftware.firstspringboot.service.ImportService;
 import com.viettelsoftware.firstspringboot.service.TaskService;
@@ -56,42 +54,37 @@ public class TaskController {
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
-    @GetMapping("/{id}")
-    public Task getTaskById(@PathVariable long id) {
-        return taskService.getTaskById(id)
-                .orElseThrow(() -> TaskNotFoundException.of(id));
+    @GetMapping("/{taskId}")
+    public Task getTaskById(@PathVariable Long taskId) {
+        return taskService.getTaskById(taskId);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_POST')")
     @PostMapping
-    public Task createTask(@Valid @RequestBody CreateTaskRequest request) {
-        Task task = Task.builder()
-                .description(request.getDescription())
-                .build();
-
-        return taskService.createTask(task);
+    public Task createTask(@Valid @RequestBody TaskWithoutIdDto taskWithoutId) {
+        return taskService.createTask(taskWithoutId);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_PUT')")
-    @PutMapping("/{id}")
-    public Task updateTaskById(@PathVariable long id, @Valid @RequestBody UpdateTaskRequest request) {
-        return taskService.updateTask(id, request.getDescription())
-                .orElseThrow(() -> TaskNotFoundException.of(id));
+    @PutMapping("/{taskId}")
+    public Task updateTaskById(@PathVariable Long taskId, @Valid @RequestBody TaskWithoutIdDto taskWithoutId) {
+        taskService.updateTask(taskId, taskWithoutId);
+        return taskService.getTaskById(taskId);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
-    @DeleteMapping("/{id}")
-    public Map<String, Boolean> deleteTaskById(@PathVariable long id) throws TaskNotFoundException {
-        boolean exists = taskService.exists(id);
-        taskService.deleteTaskById(id);
+    @DeleteMapping("/{taskId}")
+    public Map<String, Boolean> deleteTaskById(@PathVariable Long taskId) {
+        taskService.deleteTaskById(taskId);
 
-        return Map.of("deleted", exists);
+        // Impossible to be false - would throw TaskNotFoundException instead
+        return Map.of("deleted", true);
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_DELETE')")
     @DeleteMapping
     public Map<String, Long> deleteTasks() {
-        long taskCount = taskService.count();
+        val taskCount = taskService.count();
         taskService.deleteTasks();
 
         return Map.of("deleted", taskCount);

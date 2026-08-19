@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.config;
 
-import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
+import com.viettelsoftware.firstspringboot.exception.abc.BaseGloballyHandledException;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;

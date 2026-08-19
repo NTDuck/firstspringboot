@@ -1,26 +1,16 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
-import lombok.NonNull;
+import com.viettelsoftware.firstspringboot.service.dto.AuditEventsQueryFilterDto;
+import com.viettelsoftware.firstspringboot.service.exception.CurrentAuthenticatedUserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 
-import java.time.LocalDate;
-
 public interface AuditService {
 
-    void audit(@NonNull AuditEvent event);
+    void auditSuccess(String serviceName, String action) throws CurrentAuthenticatedUserNotFoundException;
+    void auditFailure(String serviceName, String action, @Nullable Exception exception) throws CurrentAuthenticatedUserNotFoundException;
 
-    @NonNull Page<@NonNull AuditEvent> getAuditEventsByDay(@NonNull LocalDate day, @NonNull Pageable pageable);
-
-    @NonNull Page<@NonNull AuditEvent> getAuditEventsByServiceName(@NonNull String serviceName, @NonNull Pageable pageable);
-
-    @NonNull Page<@NonNull AuditEvent> getAuditEventsByActorUserId(@NonNull Long actorUserId, @NonNull Pageable pageable);
-
-    @NonNull Page<@NonNull AuditEvent> getAuditEventsByActorUsername(@NonNull String actorUsername, @NonNull Pageable pageable);
-
-    @NonNull Page<@NonNull AuditEvent> getAuditEventsByAction(@NonNull String action, @NonNull Pageable pageable);
-
-    @NonNull Page<@NonNull AuditEvent> getAuditEventsByResult(@NonNull Boolean result, @NonNull Pageable pageable);
+    Page<AuditEvent> getAuditEvents(AuditEventsQueryFilterDto filter, Pageable pageable);
 }

@@ -6,5 +6,6 @@ import lombok.*;
 @Builder
 @AllArgsConstructor(staticName = "of")
 public class DownloadExportResponse {
+
     private final @NonNull String url;
 }

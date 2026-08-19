@@ -1,8 +1,9 @@
 package com.viettelsoftware.firstspringboot.advice;
 
-import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
+import com.viettelsoftware.firstspringboot.exception.abc.BaseGloballyHandledException;
 import com.viettelsoftware.firstspringboot.service.TraceService;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,6 +26,12 @@ public class GlobalExceptionHandler {
                 .error(exception.getError())
                 .message(exception.getMessage())
                 .build();
+
+        log.warn(
+                "Caught by GlobalExceptionHandler: [traceId={}, status={}, error={}]",
+                payload.getTraceId(),
+                exception.getHttpStatus().value(),
+                exception.getError());
 
         return new ResponseEntity<>(payload, exception.getHttpStatus());
     }

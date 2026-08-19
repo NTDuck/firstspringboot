@@ -13,7 +13,6 @@ import javax.persistence.*;
 @Table(name = "tasks")
 public class Task extends AuditableEntity {
 
-    @With
     @Column(nullable = false)
     private String description;
 }

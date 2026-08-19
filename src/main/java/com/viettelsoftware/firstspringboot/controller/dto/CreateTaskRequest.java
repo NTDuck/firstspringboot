@@ -11,6 +11,7 @@ import com.viettelsoftware.firstspringboot.validation.ValidTaskDescription;
 @Builder
 @AllArgsConstructor(staticName = "of")
 public class CreateTaskRequest {
+
     @ValidTaskDescription
     private final @NonNull String description;
 }

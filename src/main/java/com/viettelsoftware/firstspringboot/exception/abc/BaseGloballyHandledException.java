@@ -1,7 +1,8 @@
-package com.viettelsoftware.firstspringboot.controller.exception.abc;
+package com.viettelsoftware.firstspringboot.exception.abc;
 
 import lombok.Getter;
 import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 
 @Getter
@@ -10,7 +11,7 @@ public abstract class BaseGloballyHandledException extends RuntimeException {
     private final @NonNull HttpStatus httpStatus;
     private final @NonNull String error;
 
-    protected BaseGloballyHandledException(HttpStatus httpStatus, String message) {
+    protected BaseGloballyHandledException(@NotNull HttpStatus httpStatus, String message) {
         super(message);
 
         this.httpStatus = httpStatus;
@@ -25,7 +26,7 @@ public abstract class BaseGloballyHandledException extends RuntimeException {
                 .replace(" ", "_");
     }
 
-    protected BaseGloballyHandledException(HttpStatus httpStatus, String error, String message) {
+    protected BaseGloballyHandledException(@NotNull HttpStatus httpStatus, @NotNull String error, String message) {
         super(message);
 
         this.httpStatus = httpStatus;
