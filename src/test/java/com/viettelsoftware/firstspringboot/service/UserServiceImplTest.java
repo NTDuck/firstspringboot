@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.User;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +26,14 @@ class UserServiceImplTest {
     private AuditService auditService;
 
     @Mock
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @InjectMocks
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
-        lenient().when(authService.getCurrentUser()).thenReturn(CurrentUser.builder().id(1L).name("testuser").roles(List.of()).build());
+        lenient().when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(AuthenticatedUser.builder().id(1L).name("testuser").roles(List.of()).build());
     }
 
     @Test

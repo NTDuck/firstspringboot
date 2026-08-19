@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.config;
 
-import com.viettelsoftware.firstspringboot.exception.FirstspringbootApplicationException;
+import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -31,7 +31,7 @@ public class SecurityFilterChainExceptionHandler extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             filterChain.doFilter(request, response);
-        } catch (FirstspringbootApplicationException exception) {
+        } catch (BaseGloballyHandledException exception) {
             // Routes to `GlobalExceptionHandler`
             resolver.resolveException(request, response, null, exception);
         }

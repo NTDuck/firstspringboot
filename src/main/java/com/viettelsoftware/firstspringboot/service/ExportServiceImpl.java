@@ -1,10 +1,10 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Export;
-import com.viettelsoftware.firstspringboot.exception.ExportNotFoundException;
-import com.viettelsoftware.firstspringboot.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.repository.ExportRepository;
 import lombok.NonNull;
 import org.slf4j.Logger;
@@ -27,14 +27,14 @@ public class ExportServiceImpl implements ExportService {
     private ExportRepository exportRepository;
 
     @Autowired
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private Processor processor;
 
     @Override
     public @NonNull Export create(@NonNull CreateExportRequest request) {
-        CurrentUser user = authService.getCurrentUser();
+        AuthenticatedUser user = authenticationService.getCurrentAuthenticatedUser();
         if (user == null) {
             throw new InsufficientAuthorizationException("anonymous", "create export");
         }

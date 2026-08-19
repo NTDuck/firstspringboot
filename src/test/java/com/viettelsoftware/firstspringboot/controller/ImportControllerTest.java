@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.controller;
 
 import com.viettelsoftware.firstspringboot.entity.Import;
-import com.viettelsoftware.firstspringboot.exception.ImportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.ImportNotFoundException;
 import com.viettelsoftware.firstspringboot.service.ImportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

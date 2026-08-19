@@ -1,9 +1,9 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.dto.CreateExportRequest;
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Export;
-import com.viettelsoftware.firstspringboot.exception.ExportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
 import com.viettelsoftware.firstspringboot.repository.ExportRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +25,7 @@ class ExportServiceImplTest {
     private ExportRepository exportRepository;
 
     @Mock
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @Mock
     private ExportServiceImpl.Processor processor;
@@ -35,8 +35,8 @@ class ExportServiceImplTest {
 
     @Test
     void testCreateExport() {
-        CurrentUser user = CurrentUser.builder().id(5L).name("john").roles(List.of()).build();
-        when(authService.getCurrentUser()).thenReturn(user);
+        AuthenticatedUser user = AuthenticatedUser.builder().id(5L).name("john").roles(List.of()).build();
+        when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(user);
 
         Export saved = Export.builder()
                 .id(10L)

@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +26,14 @@ class TaskServiceImplTest {
     private AuditService auditService;
 
     @Mock
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @InjectMocks
     private TaskServiceImpl taskService;
 
     @BeforeEach
     void setUp() {
-        lenient().when(authService.getCurrentUser()).thenReturn(CurrentUser.builder().id(1L).name("testuser").roles(List.of()).build());
+        lenient().when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(AuthenticatedUser.builder().id(1L).name("testuser").roles(List.of()).build());
     }
 
     @Test

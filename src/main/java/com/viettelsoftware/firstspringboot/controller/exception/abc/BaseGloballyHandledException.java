@@ -1,15 +1,15 @@
-package com.viettelsoftware.firstspringboot.exception;
+package com.viettelsoftware.firstspringboot.controller.exception.abc;
 
 import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public abstract class FirstspringbootApplicationException extends RuntimeException {
+public abstract class BaseGloballyHandledException extends RuntimeException {
     private final @NonNull HttpStatus httpStatus;
     private final @NonNull String error;
 
-    protected FirstspringbootApplicationException(@NonNull HttpStatus httpStatus, @NonNull String message) {
+    protected BaseGloballyHandledException(@NonNull HttpStatus httpStatus, @NonNull String message) {
         super(message);
 
         this.httpStatus = httpStatus;
@@ -20,7 +20,7 @@ public abstract class FirstspringbootApplicationException extends RuntimeExcepti
                 .replace(" ", "_");
     }
 
-    protected FirstspringbootApplicationException(@NonNull HttpStatus httpStatus, @NonNull String error, @NonNull String message) {
+    protected BaseGloballyHandledException(@NonNull HttpStatus httpStatus, @NonNull String error, @NonNull String message) {
         super(message);
 
         this.httpStatus = httpStatus;

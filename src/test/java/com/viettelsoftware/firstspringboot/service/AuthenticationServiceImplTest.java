@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,9 +15,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuthServiceImplTest {
+class AuthenticationServiceImplTest {
 
-    private final AuthService authService = new AuthServiceImpl();
+    private final AuthenticationService authenticationService = new AuthenticationServiceImpl();
 
     @BeforeEach
     @AfterEach
@@ -26,7 +26,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void testGetCurrentUserWithJwtToken() {
+    void testGetCurrentAuthenticatedUserWithJwtToken() {
         Jwt jwt = new Jwt(
                 "token-val",
                 Instant.now(),
@@ -40,17 +40,17 @@ class AuthServiceImplTest {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        CurrentUser currentUser = authService.getCurrentUser();
+        AuthenticatedUser authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
 
-        assertNotNull(currentUser);
-        assertEquals(123L, currentUser.getId());
-        assertEquals("testuser", currentUser.getName());
-        assertEquals(List.of("REALM_ROLE_GET"), currentUser.getRoles());
+        assertNotNull(authenticatedUser);
+        assertEquals(123L, authenticatedUser.getId());
+        assertEquals("testuser", authenticatedUser.getName());
+        assertEquals(List.of("REALM_ROLE_GET"), authenticatedUser.getRoles());
     }
 
     @Test
-    void testGetCurrentUserUnauthenticated() {
-        CurrentUser currentUser = authService.getCurrentUser();
-        assertNull(currentUser);
+    void testGetCurrentAuthenticatedUserUnauthenticated() {
+        AuthenticatedUser authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
+        assertNull(authenticatedUser);
     }
 }

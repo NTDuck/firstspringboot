@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.advice;
 
-import com.viettelsoftware.firstspringboot.exception.FirstspringbootApplicationException;
+import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -15,8 +15,8 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(FirstspringbootApplicationException.class)
-    public @NonNull ResponseEntity<Payload> handle(@NonNull FirstspringbootApplicationException exception, @NonNull HttpServletRequest request) {
+    @ExceptionHandler(BaseGloballyHandledException.class)
+    public @NonNull ResponseEntity<Payload> handle(@NonNull BaseGloballyHandledException exception, @NonNull HttpServletRequest request) {
         val payload = Payload.builder()
                 .status(exception.getHttpStatus().value())
                 .error(exception.getError())

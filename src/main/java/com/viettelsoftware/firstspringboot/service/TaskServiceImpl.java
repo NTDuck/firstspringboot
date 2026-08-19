@@ -1,6 +1,6 @@
 package com.viettelsoftware.firstspringboot.service;
 
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.AuditEvent;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
@@ -21,7 +21,7 @@ public class TaskServiceImpl implements TaskService {
     private AuditService auditService;
 
     @Autowired
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @Override
     public boolean exists(long taskId) {
@@ -76,15 +76,15 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void audit(@NonNull String action) {
-        CurrentUser currentUser = authService.getCurrentUser();
-        if (currentUser == null) {
+        AuthenticatedUser authenticatedUser = authenticationService.getCurrentAuthenticatedUser();
+        if (authenticatedUser == null) {
             return;
         }
 
         AuditEvent auditEvent = AuditEvent.builder()
                 .serviceName(TaskService.class.getSimpleName())
-                .actorUserId(currentUser.getId())
-                .actorUsername(currentUser.getName())
+                .actorUserId(authenticatedUser.getId())
+                .actorUsername(authenticatedUser.getName())
                 .action(action)
                 .result(true)
                 .exception(null)

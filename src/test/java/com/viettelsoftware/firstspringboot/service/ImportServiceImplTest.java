@@ -1,9 +1,9 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.dto.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Import;
-import com.viettelsoftware.firstspringboot.exception.ImportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.ImportNotFoundException;
 import com.viettelsoftware.firstspringboot.repository.ImportRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +27,7 @@ class ImportServiceImplTest {
     private ImportRepository importRepository;
 
     @Mock
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @Mock
     private ImportServiceImpl.Processor processor;
@@ -40,8 +40,8 @@ class ImportServiceImplTest {
 
     @Test
     void testCreateImport() {
-        CurrentUser user = CurrentUser.builder().id(5L).name("john").roles(List.of()).build();
-        when(authService.getCurrentUser()).thenReturn(user);
+        AuthenticatedUser user = AuthenticatedUser.builder().id(5L).name("john").roles(List.of()).build();
+        when(authenticationService.getCurrentAuthenticatedUser()).thenReturn(user);
 
         Import saved = Import.builder()
                 .id(10L)

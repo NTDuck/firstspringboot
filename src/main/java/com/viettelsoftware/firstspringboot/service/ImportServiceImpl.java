@@ -1,16 +1,15 @@
 package com.viettelsoftware.firstspringboot.service;
 
 import com.viettelsoftware.firstspringboot.dto.CreateImportRequest;
-import com.viettelsoftware.firstspringboot.dto.CurrentUser;
+import com.viettelsoftware.firstspringboot.service.model.AuthenticatedUser;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;
 import com.viettelsoftware.firstspringboot.entity.User;
-import com.viettelsoftware.firstspringboot.exception.ImportNotFoundException;
-import com.viettelsoftware.firstspringboot.exception.InsufficientAuthorizationException;
+import com.viettelsoftware.firstspringboot.controller.exception.ImportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.InsufficientAuthorizationException;
 import com.viettelsoftware.firstspringboot.repository.ImportRepository;
 import com.viettelsoftware.firstspringboot.repository.TaskRepository;
 import com.viettelsoftware.firstspringboot.repository.UserRepository;
-import com.viettelsoftware.firstspringboot.validation.TaskDescriptionValidator;
 import lombok.*;
 import org.apache.poi.ss.usermodel.*;
 import org.keycloak.admin.client.Keycloak;
@@ -38,7 +37,7 @@ public class ImportServiceImpl implements ImportService {
     private ImportRepository importRepository;
 
     @Autowired
-    private AuthService authService;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private Processor processor;
@@ -48,7 +47,7 @@ public class ImportServiceImpl implements ImportService {
 
     @Override
     public @NonNull Import create(@NonNull CreateImportRequest request) {
-        CurrentUser user = authService.getCurrentUser();
+        AuthenticatedUser user = authenticationService.getCurrentAuthenticatedUser();
         if (user == null) {
             throw new InsufficientAuthorizationException("anonymous", "create import");
         }

@@ -1,7 +1,7 @@
 package com.viettelsoftware.firstspringboot.controller;
 
 import com.viettelsoftware.firstspringboot.entity.Export;
-import com.viettelsoftware.firstspringboot.exception.ExportNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.ExportNotFoundException;
 import com.viettelsoftware.firstspringboot.service.ExportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,5 +1,6 @@
 package com.viettelsoftware.firstspringboot.entity;
 
+import com.viettelsoftware.firstspringboot.entity.abc.AuditableEntity;
 import lombok.*;
 import javax.persistence.*;
 
@@ -7,16 +8,12 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor(force = true)
-@AllArgsConstructor
+@AllArgsConstructor(staticName = "of")
 @Entity
 @Table(name = "tasks")
-public class Task {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class Task extends AuditableEntity {
 
     @With
-    @Column(name = "task", nullable = false)
-    private @NonNull String description;
+    @Column(nullable = false)
+    private String description;
 }

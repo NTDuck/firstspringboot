@@ -1,45 +1,58 @@
 package com.viettelsoftware.firstspringboot.entity;
 
+import com.viettelsoftware.firstspringboot.entity.abc.BaseEntity;
 import lombok.*;
-import org.springframework.lang.Nullable;
 
 import javax.persistence.*;
-import java.time.Instant;
 
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor(force = true)
 @AllArgsConstructor
 @Entity
 @Table(name = "audit_events", indexes = {
-        @Index(name = "idx_audit_service_timestamp", columnList = "service_name, timestamp"),
-        @Index(name = "idx_audit_actor_timestamp", columnList = "actor_user_id, timestamp")
+        @Index(name = "idx_audit_service_name_created_at", columnList = "service_name, created_at"),
+        @Index(name = "idx_audit_actor_user_id_created_at", columnList = "actor_user_id, created_at")
 })
-public class AuditEvent {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class AuditEvent extends BaseEntity {
 
-    @Builder.Default
-    @Column(name = "timestamp", nullable = false)
-    private @NonNull Instant timestamp = Instant.now();
+    @Embedded
+    private Service service;
 
-    @Column(name = "service_name", nullable = false)
-    private @NonNull String serviceName;
+    @Embedded
+    private Actor actor;
 
-    @Column(name = "actor_user_id", nullable = false)
-    private long actorUserId;
+    @Column(nullable = false)
+    private String action;
 
-    @Column(name = "actor_username", nullable = false)
-    private @NonNull String actorUsername;
-
-    @Column(name = "action", nullable = false)
-    private @NonNull String action;
-
-    @Column(name = "result", nullable = false)
+    @Column(nullable = false)
     private boolean result;
 
-    @Column(name = "exception", columnDefinition = "TEXT")
-    private @Nullable String exception;
+    // Potential invalid state (result = false, exception != null)
+    private String exception;
+
+    @Getter
+    @Setter
+    @Builder
+    @AllArgsConstructor
+    @Embeddable
+    public static class Service {
+
+        @Column(name = "service_name", nullable = false)
+        private String name;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @AllArgsConstructor
+    @Embeddable
+    public static class Actor {
+
+        @Column(name = "actor_user_id", nullable = false)
+        private Long userId;
+
+        @Column(name = "actor_username", nullable = false)
+        private String username;
+    }
 }

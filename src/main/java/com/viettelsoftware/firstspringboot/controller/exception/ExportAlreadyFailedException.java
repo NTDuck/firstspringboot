@@ -1,12 +1,13 @@
-package com.viettelsoftware.firstspringboot.exception;
+package com.viettelsoftware.firstspringboot.controller.exception;
 
+import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class ExportAlreadyFailedException extends FirstspringbootApplicationException {
+public class ExportAlreadyFailedException extends BaseGloballyHandledException {
     private final long exportId;
 
     public static @NonNull ExportAlreadyFailedException of(long exportId) {

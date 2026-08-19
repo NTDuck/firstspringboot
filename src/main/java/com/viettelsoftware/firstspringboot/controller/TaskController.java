@@ -7,11 +7,13 @@ import com.viettelsoftware.firstspringboot.dto.UpdateTaskRequest;
 import com.viettelsoftware.firstspringboot.entity.Export;
 import com.viettelsoftware.firstspringboot.entity.Import;
 import com.viettelsoftware.firstspringboot.entity.Task;
-import com.viettelsoftware.firstspringboot.exception.TaskNotFoundException;
+import com.viettelsoftware.firstspringboot.controller.exception.TaskNotFoundException;
 import com.viettelsoftware.firstspringboot.service.ExportService;
 import com.viettelsoftware.firstspringboot.service.ImportService;
 import com.viettelsoftware.firstspringboot.service.TaskService;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,29 +24,25 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/tasks")
 public class TaskController {
 
-    @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private ExportService exportService;
-
-    @Autowired
-    private ImportService importService;
+    private final TaskService taskService;
+    private final ExportService exportService;
+    private final ImportService importService;
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping
-    public List<@NonNull Task> getTasks() {
+    public List<Task> getTasks() {
         return taskService.getTasks();
     }
 
     @PreAuthorize("hasAuthority('REALM_ROLE_GET')")
     @GetMapping("/export")
     public ResponseEntity<Void> exportTasks() {
-        Export export = exportService.create(CreateExportRequest.of(Export.Type.TASK));
+        val export = exportService.create(CreateExportRequest.of(Export.Type.TASK));
         return ResponseEntity.accepted()
                 .location(URI.create(String.format("/api/v1/exports/%d", export.getId())))
                 .build();

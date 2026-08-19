@@ -1,12 +1,13 @@
-package com.viettelsoftware.firstspringboot.exception;
+package com.viettelsoftware.firstspringboot.controller.exception;
 
+import com.viettelsoftware.firstspringboot.controller.exception.abc.BaseGloballyHandledException;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class InsufficientAuthorizationException extends FirstspringbootApplicationException {
+public class InsufficientAuthorizationException extends BaseGloballyHandledException {
     private final @NonNull String username;
     private final @NonNull String operation;
 
