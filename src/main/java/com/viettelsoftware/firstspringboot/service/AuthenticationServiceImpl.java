@@ -26,11 +26,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Optional<AuthenticatedUserDto> getCurrentAuthenticatedUser() {
         val authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (!(authentication instanceof JwtAuthenticationToken)) {
-            return Optional.empty();
-        }
-
+        if (!(authentication instanceof JwtAuthenticationToken)) return Optional.empty();
         val jwt = ((JwtAuthenticationToken) authentication).getToken();
 
         val subject = getSubjectFromJwt(jwt);
