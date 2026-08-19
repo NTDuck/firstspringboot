@@ -1,15 +1,42 @@
 # firstspringboot
 
-## Setup
+A Spring Boot 2.4 service implementing task and user management, asynchronous Excel import/export via MinIO object storage, Keycloak OAuth2 Resource Server authentication and background user sync, and auditing with Spring AOP.
+
+## Prerequisites & Setup
+
+- **Java**: OpenJDK 11
+- **Docker & Docker Compose**: For MariaDB, Keycloak, and MinIO infrastructure
+
+### Start Infrastructure
 
 ```bash
 docker-compose up -d
+```
+
+### Run Application
+
+```bash
 ./mvnw spring-boot:run
 ```
 
+### Run Tests
+
+```bash
+./mvnw clean test
+```
+
+## Architecture & Code Conventions
+
+- **Granular Service Separation**: Follows single-responsibility pattern with small, cohesive helper methods and explicit domain boundaries.
+- **Dependency Injection**: Constructor-based injection via Lombok `@RequiredArgsConstructor` and `private final` fields.
+- **Transactional & Caching Semantics**: Declarative `@Transactional(readOnly = true)` for query paths, `@Transactional` for writes, and Spring Cache annotations (`@Cacheable`, `@CachePut`, `@CacheEvict`) on service methods.
+- **Auditing**: Method-level `@Auditable` intercepted by `AuditAspect`, automatically logging actor identity, service name, action, and execution outcome to `audit_events`.
+- **Global Error Handling**: Custom domain exceptions extend `BaseGloballyHandledException` and are translated to structured JSON responses via `GlobalExceptionHandler`.
+- **JPA Entities & Auditing**: Entities extend `BaseEntity` / `AuditableEntity` using Lombok `@SuperBuilder` and JPA auditing listeners (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`, `@LastModifiedBy`).
+
 ## Authentication
 
-Obtain JWT access token from Keycloak:
+Obtain a JWT access token from Keycloak:
 
 ```bash
 TOKEN=$(curl -s -X POST "http://localhost:8081/realms/firstspringbootrealm/protocol/openid-connect/token" \
@@ -21,7 +48,7 @@ TOKEN=$(curl -s -X POST "http://localhost:8081/realms/firstspringbootrealm/proto
   -d "password=firstspringbootuserpassword" | jq -r .access_token)
 ```
 
-## API Routes Verification
+## API Reference & Verification
 
 ### System & Health
 
@@ -29,14 +56,14 @@ TOKEN=$(curl -s -X POST "http://localhost:8081/realms/firstspringbootrealm/proto
 # Health Status
 curl -s http://localhost:8080/actuator/health
 
-# Ping
-curl -s http://localhost:8080/api/v1/ping
+# Ping (Returns 204 No Content)
+curl -i -s http://localhost:8080/ping
 ```
 
 ### User Management
 
 ```bash
-# Get User Profile
+# Get Current User Profile
 curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/users/profile
 
 # List Users
@@ -91,42 +118,36 @@ curl -s -X DELETE http://localhost:8080/api/v1/tasks \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### Exports
+### Exports Workflow
 
-```bash
-# 1. Trigger export via GET /api/v1/tasks/export or GET /api/v1/users/export -> 202 Accepted, Location: /api/v1/exports/{id}
+1. **Trigger Export**: Call `GET /api/v1/tasks/export` or `GET /api/v1/users/export` $\rightarrow$ `202 Accepted` with `Location: /api/v1/exports/{id}`.
+2. **Poll Status**:
+   ```bash
+   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/exports/1
+   ```
+   Transitions: `PENDING` $\rightarrow$ `PROCESSING` $\rightarrow$ `SUCCESS` / `FAILED`.
+3. **Retrieve Presigned Download URL**:
+   ```bash
+   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/exports/1/download
+   ```
 
-# 2. Check Export Status (PENDING -> PROCESSING -> SUCCESS / FAILED)
-curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/exports/1
-
-# 3. Retrieve Presigned Download URL (when status is SUCCESS)
-curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/exports/1/download
-```
-
-### Imports
-
-The import workflow is fully asynchronous:
+### Imports Workflow
 
 1. **Initiate Import**:
-   Call `POST /api/v1/tasks/import` or `POST /api/v1/users/import`. This creates a new `Import` job in `PENDING` status, generates a presigned MinIO PUT upload URL, launches background asynchronous processing, and returns `202 Accepted` with `Location: /api/v1/imports/{id}`.
-
-2. **Retrieve Presigned Upload URL & Inspect Status**:
+   Call `POST /api/v1/tasks/import` or `POST /api/v1/users/import`. Returns `202 Accepted` with `Location: /api/v1/imports/{id}`.
+2. **Inspect Job & Presigned Upload URL**:
    ```bash
    curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/imports/1
    ```
-   The response contains `url`, which is the presigned PUT URL.
-
-3. **Upload File to Storage**:
-   Upload the Excel (`.xlsx`) file directly to the presigned upload URL via HTTP PUT:
+   The `url` field contains the presigned HTTP PUT URL.
+3. **Upload Spreadsheet**:
+   Upload the Excel (`.xlsx`) file to the presigned URL:
    ```bash
    curl -T /path/to/data.xlsx "http://localhost:9000/firstspringboot/imports-1.xlsx?..."
    ```
-
-4. **Automatic Asynchronous Processing**:
-   The background `ImportServiceImpl.Processor` detects the completed upload in object storage, validates file integrity and business rules, upserts valid records into the local database (and Keycloak for users), and updates the status to `SUCCESS` (or `FAILED` if validation errors occur).
-
-5. **Track Status & Completion**:
-   Reload/poll the status endpoint to observe transitions (`PENDING` $\rightarrow$ `PROCESSING` $\rightarrow$ `SUCCESS` / `FAILED`):
+4. **Asynchronous Processing**:
+   `ImportServiceImpl.Processor` detects the uploaded object, validates structure and contents, upserts records to the repository, and updates status to `SUCCESS` (or `FAILED` with error diagnostics).
+5. **Poll Status**:
    ```bash
    curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/imports/1
    ```
@@ -134,7 +155,8 @@ The import workflow is fully asynchronous:
 ### Audit Logs
 
 ```bash
-# Query Audit Logs (Supports day, serviceName, actorUserId, actorUsername, action, result params)
+# Query Audit Logs (Filter by day, serviceName, actorUserId, actorUsername, action, result)
 curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/audit?serviceName=UserService"
 curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/audit?action=CREATE_TASK"
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/audit?result=true"
 ```
