@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class MinIOObjectStorageService implements ObjectStorageService, InitializingBean {
+public class MinioObjectStorageServiceImpl implements ObjectStorageService, InitializingBean {
 
     private static final int MAX_EXPIRY_SECONDS = 7 * 24 * 3600;
 
