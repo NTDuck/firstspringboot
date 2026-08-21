@@ -26,6 +26,13 @@
 		<tag/>
 		<url/>
 	</scm>
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/NTDuck/firstspringboot</url>
+		</repository>
+	</distributionManagement>
 	<properties>
 		<java.version>11</java.version>
 		<lombok.version>1.18.30</lombok.version>
