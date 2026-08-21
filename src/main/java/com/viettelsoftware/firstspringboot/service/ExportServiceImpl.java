@@ -99,12 +99,10 @@ public class ExportServiceImpl implements ExportService {
 
         @Async
         public void process(long exportId) {
-            val exportOptional = exportRepository.findById(exportId);
-            if (exportOptional.isEmpty()) return;
+            val claimedExport = claimJob(exportId);
+            if (claimedExport.isEmpty()) return;
 
-            val export = exportOptional.get();
-            markProcessing(export);
-
+            val export = claimedExport.get();
             val startTime = System.currentTimeMillis();
             File tempFile = null;
             try {
@@ -124,9 +122,17 @@ public class ExportServiceImpl implements ExportService {
             }
         }
 
-        private void markProcessing(Export export) {
+        // MariaDB SELECT ... FOR UPDATE row-level lock for atomic job claiming
+        @Transactional
+        public Optional<Export> claimJob(long exportId) {
+            val exportOptional = exportRepository.findByIdForUpdate(exportId);
+            if (exportOptional.isEmpty()) return Optional.empty();
+
+            val export = exportOptional.get();
+            if (export.getStatus() != Export.Status.PENDING) return Optional.empty();
+
             export.setStatus(Export.Status.PROCESSING);
-            exportRepository.save(export);
+            return Optional.of(exportRepository.save(export));
         }
 
         private File generateExportFile(Export.Type type) {

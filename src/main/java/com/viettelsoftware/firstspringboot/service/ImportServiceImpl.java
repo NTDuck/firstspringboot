@@ -122,15 +122,14 @@ public class ImportServiceImpl implements ImportService {
 
         @Async
         public void process(long importId) {
-            val importOptional = importRepository.findById(importId);
-            if (importOptional.isEmpty()) return;
-
-            val importEntity = importOptional.get();
             val objectKey = buildObjectKey(importId);
 
             if (!waitForFileUpload(objectKey)) return;
 
-            markProcessing(importEntity);
+            val claimedImport = claimJob(importId);
+            if (claimedImport.isEmpty()) return;
+
+            val importEntity = claimedImport.get();
             val startTime = System.currentTimeMillis();
 
             try {
@@ -148,6 +147,19 @@ public class ImportServiceImpl implements ImportService {
             }
         }
 
+        // MariaDB SELECT ... FOR UPDATE row-level lock for atomic job claiming
+        @Transactional
+        public Optional<Import> claimJob(long importId) {
+            val importOptional = importRepository.findByIdForUpdate(importId);
+            if (importOptional.isEmpty()) return Optional.empty();
+
+            val importEntity = importOptional.get();
+            if (importEntity.getStatus() != Import.Status.PENDING) return Optional.empty();
+
+            importEntity.setStatus(Import.Status.PROCESSING);
+            return Optional.of(importRepository.save(importEntity));
+        }
+
         private boolean waitForFileUpload(String objectKey) {
             for (int i = 0; i < 50; i++) {
                 if (objectStorageService.exists(objectKey)) return true;
@@ -159,11 +171,6 @@ public class ImportServiceImpl implements ImportService {
                 }
             }
             return false;
-        }
-
-        private void markProcessing(Import importEntity) {
-            importEntity.setStatus(Import.Status.PROCESSING);
-            importRepository.save(importEntity);
         }
 
         private void markSuccess(Import importEntity, long startTime) {

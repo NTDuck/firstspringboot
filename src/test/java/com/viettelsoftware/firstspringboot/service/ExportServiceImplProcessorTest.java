@@ -52,13 +52,15 @@ class ExportServiceImplProcessorTest {
             fos.write(new byte[]{1, 2, 3});
         }
 
-        when(exportRepository.findById(1L)).thenReturn(Optional.of(export));
+        when(exportRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(export));
+        when(exportRepository.save(any(Export.class))).thenReturn(export);
         when(taskExportGenerator.generate()).thenReturn(tempFile);
         when(objectStorageService.createPresignedDownloadUrl(eq("tasks-1.xlsx"), any(Duration.class)))
                 .thenReturn("http://localhost:9000/bucket/tasks-1.xlsx");
 
         processor.process(1L);
 
+        verify(exportRepository).findByIdForUpdate(1L);
         verify(objectStorageService).put(eq("tasks-1.xlsx"), any(InputStream.class), eq(3L), anyString());
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
         verify(exportRepository, atLeast(2)).save(captor.capture());
@@ -82,13 +84,15 @@ class ExportServiceImplProcessorTest {
             fos.write(new byte[]{4, 5, 6, 7});
         }
 
-        when(exportRepository.findById(2L)).thenReturn(Optional.of(export));
+        when(exportRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(export));
+        when(exportRepository.save(any(Export.class))).thenReturn(export);
         when(userExportGenerator.generate()).thenReturn(tempFile);
         when(objectStorageService.createPresignedDownloadUrl(eq("users-2.xlsx"), any(Duration.class)))
                 .thenReturn("http://localhost:9000/bucket/users-2.xlsx");
 
         processor.process(2L);
 
+        verify(exportRepository).findByIdForUpdate(2L);
         verify(objectStorageService).put(eq("users-2.xlsx"), any(InputStream.class), eq(4L), anyString());
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
         verify(exportRepository, atLeast(2)).save(captor.capture());
@@ -106,11 +110,13 @@ class ExportServiceImplProcessorTest {
                 .build();
         ReflectionTestUtils.setField(export, "id", 3L);
 
-        when(exportRepository.findById(3L)).thenReturn(Optional.of(export));
+        when(exportRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(export));
+        when(exportRepository.save(any(Export.class))).thenReturn(export);
         when(taskExportGenerator.generate()).thenThrow(new RuntimeException("Generation failed"));
 
         processor.process(3L);
 
+        verify(exportRepository).findByIdForUpdate(3L);
         ArgumentCaptor<Export> captor = ArgumentCaptor.forClass(Export.class);
         verify(exportRepository, atLeast(2)).save(captor.capture());
 
@@ -120,11 +126,29 @@ class ExportServiceImplProcessorTest {
     }
 
     @Test
+    void testProcessExportAlreadyProcessingSkipped() {
+        Export export = Export.builder()
+                .type(Export.Type.TASK)
+                .status(Export.Status.PROCESSING)
+                .build();
+        ReflectionTestUtils.setField(export, "id", 4L);
+
+        when(exportRepository.findByIdForUpdate(4L)).thenReturn(Optional.of(export));
+
+        processor.process(4L);
+
+        verify(exportRepository).findByIdForUpdate(4L);
+        verify(exportRepository, never()).save(any());
+        verifyNoInteractions(taskExportGenerator, userExportGenerator, objectStorageService);
+    }
+
+    @Test
     void testProcessExportNotFound() {
-        when(exportRepository.findById(999L)).thenReturn(Optional.empty());
+        when(exportRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         processor.process(999L);
 
+        verify(exportRepository).findByIdForUpdate(999L);
         verify(exportRepository, never()).save(any());
         verifyNoInteractions(taskExportGenerator, userExportGenerator, objectStorageService);
     }
