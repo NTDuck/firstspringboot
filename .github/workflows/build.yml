@@ -2,8 +2,6 @@ name: Verify everything works before publish
 
 on:
   push:
-    branches:
-      - *
   pull_request:
 
 jobs:
